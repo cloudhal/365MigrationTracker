@@ -1,0 +1,33 @@
+namespace _365MigrationTracker.Models;
+
+/// <summary>
+/// Represents the current migration metrics snapshot data.
+/// </summary>
+public class MigrationMetrics
+{
+    /// <summary>
+    /// Number of users still synchronized from on-premises AD.
+    /// </summary>
+    public int SyncedUsers { get; set; }
+
+    /// <summary>
+    /// Number of groups still synchronized from on-premises AD.
+    /// </summary>
+    public int SyncedGroups { get; set; }
+
+    /// <summary>
+    /// Number of computers with Microsoft Entra hybrid join (trustType == "ServerAd" and registered).
+    /// </summary>
+    public int HybridDevices { get; set; }
+
+    /// <summary>
+    /// Number of hybrid devices whose registration is still pending (trustType == "ServerAd" and not registered).
+    /// </summary>
+    public int PendingHybridDevices { get; set; }
+
+    /// <summary>
+    /// Number of devices with Microsoft Entra join (trustType == "AzureAd").
+    /// </summary>
+    public int EntraJoinedDevices { get; set; }
+}
+

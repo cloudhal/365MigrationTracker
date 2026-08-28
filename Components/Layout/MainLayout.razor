@@ -1,23 +1,159 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<CascadingValue Name="IsDarkMode" Value="_isDarkMode">
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="MudBlazor.Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h6" Class="px-4">365 Migration Tracker</MudText>
+        <MudSpacer />
+
+        @* Displays the organisation logo in top left using CSS *@
+        @* <Logo /> *@
+
+        @* Dark mode button *@
+        <MudToggleIconButton @bind-Toggled="_isDarkMode" @onclick="EnableDarkMode"
+        Icon="@Icons.Material.Outlined.DarkMode" Color="@MudBlazor.Color.Inherit" Title="DarkMode"
+        ToggledIcon="@Icons.Material.Filled.WbSunny" ToggledTitle="LightMode" />
+
+        @* Refresh data button *@
+        @* <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="MudBlazor.Color.Inherit" Title="Refresh data" OnClick="RefreshDataClicked" /> *@
+
+        @*Settings button*@
+        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="MudBlazor.Color.Inherit" OnClick="SettingsButtonClicked">Settings</MudIconButton>
+        @*Settings message box*@
+        <MudMessageBox @ref="settingsmbox" Title="Settings" CancelText="">
+            <MessageContent>
+                <div style="max-height: 60vh; overflow-y: auto;">
+                    <MudGrid>
+                    </MudGrid>
+                </div>
+            </MessageContent>
+            <YesButton>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Success">OK</MudButton>
+            </YesButton>
+        </MudMessageBox>
+
+        @* About message box*@
+        <About />
+
+                @* Login menu. Shows the Login Display, and user details if clicked on. *@
+        <MudMenu AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopRight">
+            <ActivatorContent>
+                @* <LoginDisplay /> *@
+            </ActivatorContent>
+            <ChildContent>
+                <MudPaper Elevation="0" Style="padding: 10px">
+                    @* <Me /> *@
+                </MudPaper>
+            </ChildContent>
+        </MudMenu>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
+        <MudDrawerHeader Class="@headerStyle"></MudDrawerHeader>
         <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer Class="mt-5 px-8" MaxWidth="MaxWidth.False">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+    <MudScrollToTop>
+        <MudFab Color="MudBlazor.Color.Tertiary" Icon="@Icons.Material.Filled.ArrowCircleUp" />
+    </MudScrollToTop>
+</MudLayout>
+</CascadingValue>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+@*Drawer*@
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    int currentYear = DateTime.Now.Year;
+
+@*Dark  mode button*@
+    private MudTheme _theme = new();
+    private bool _isDarkMode;
+    string headerStyle = "drawer-image-dark";
+
+    // Method to allow saving of dark mode to local storage
+    private async Task EnableDarkMode()
+    {
+        if (_isDarkMode)
+        {
+            _isDarkMode = false;
+            @* await localStorage.SetItemAsync("darkmode", false); *@
+            headerStyle = "drawer-image-dark";
+        }
+        else
+        {
+            _isDarkMode = true;
+            @* await localStorage.SetItemAsync("darkmode", true); *@
+            headerStyle = "drawer-image-light";
+        }
+    }
+
+    // Clear all data caches, then reload so every tile re-fetches from Graph.
+    // Settings (dark mode, component toggles, SharePoint total, expanded tiles) are preserved.
+    @* private async Task RefreshDataClicked()
+    {
+        foreach (var key in CacheKeys.Data)
+        {
+            await localStorage.RemoveItemAsync(key);
+        }
+        await JS.InvokeVoidAsync("location.reload");
+    } *@
+
+    @*Settings message box*@
+    MudMessageBox? settingsmbox { get; set; }
+    string settingsmboxstate = "Message box hasn't been opened yet";
+
+
+    private async void SettingsButtonClicked()
+    {
+        @* RefreshSelection(); // reflect current state each time the dialog opens *@
+        bool? result = await settingsmbox.ShowAsync();
+        settingsmboxstate= result==null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+    }
+    MudForm? settingsForm;
+
+
+    @*OnInitializedAsync*@
+    protected override async Task OnInitializedAsync()
+    {
+        // Load dashboard component toggles
+        @* await Settings.LoadAsync(); *@
+
+        // Load dark mode setting from localStorage
+        @* var result1 = await localStorage.GetItemAsync<bool>("darkmode"); *@
+        @* _isDarkMode = result1 ? result1 : false;
+        if (_isDarkMode) { headerStyle = "drawer-image-light"; } *@
+    }
+    // Reset all settings to defaults
+    private async Task ResetAllSettings()
+    {
+        @* await localStorage.ClearAsync(); // Reset localStorage (dark mode, caches, toggles)
+        await Settings.ResetAsync(); // Reset in-memory toggles to enabled and notify the dashboard *@
+    }
+
+    MudMessageBox? aboutmbox { get; set; }
+    string aboutstate = "Message box hasn't been opened yet";
+
+    private async void AboutButtonClicked()
+    {
+        bool? result = await aboutmbox.ShowAsync();
+        aboutstate= result==null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+    }
+
+}

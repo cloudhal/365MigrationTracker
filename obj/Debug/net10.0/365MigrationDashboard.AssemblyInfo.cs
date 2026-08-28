@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("365MigrationDashboard")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8e08c3bbf81f280e3dc03ccf751efd0045fa93cf")]
 [assembly: System.Reflection.AssemblyProductAttribute("365MigrationDashboard")]
 [assembly: System.Reflection.AssemblyTitleAttribute("365MigrationDashboard")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

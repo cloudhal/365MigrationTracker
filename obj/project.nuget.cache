@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "WfeZm1DzaxM=",
+  "dgSpecHash": "3QiKg4ITvCo=",
   "success": true,
-  "projectFilePath": "/Users/hal/repos/365MigrationDashboard/365MigrationDashboard.csproj",
+  "projectFilePath": "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj",
   "expectedPackageFiles": [
-    "/Users/hal/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.7/microsoft.aspnetcore.app.internal.assets.10.0.7.nupkg.sha512"
+    "C:\\Users\\hsclater\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.11\\microsoft.aspnetcore.app.internal.assets.10.0.11.nupkg.sha512"
   ],
   "logs": []
 }

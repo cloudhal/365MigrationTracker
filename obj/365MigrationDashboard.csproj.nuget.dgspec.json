@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj": {}
+    "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj": {}
   },
   "projects": {
-    "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj": {
+    "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj",
+        "projectUniqueName": "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj",
         "projectName": "365MigrationDashboard",
-        "projectPath": "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj",
+        "projectPath": "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationDashboard.csproj",
         "packagesPath": "C:\\Users\\hsclater\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\obj\\",
+        "outputPath": "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hsclater\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -51,6 +51,14 @@
               "target": "Package",
               "version": "[10.0.11, )",
               "autoReferenced": true
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[10.0.11, )"
+            },
+            "MudBlazor": {
+              "target": "Package",
+              "version": "[9.9.0, )"
             }
           },
           "imports": [

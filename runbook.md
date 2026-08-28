@@ -44,6 +44,12 @@ dotnet new blazor `
   --interactivity Server `
   --all-interactive
 
+  This has already been done so the project is ready for customisation.
+
+### Mudblazor component library
+
+Install and use MudBlazor components, including dark mode.
+
 ## Initial project structure
 
 Aim for a structure similar to:

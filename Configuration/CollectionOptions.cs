@@ -17,8 +17,9 @@ public class CollectionOptions
 
     /// <summary>
     /// Interval in hours between automated collection runs.
+    /// Supports decimals for testing (e.g., 0.083 ≈ 5 minutes).
     /// </summary>
-    public int IntervalHours { get; set; } = 6;
+    public double IntervalHours { get; set; } = 6;
 
     /// <summary>
     /// Metrics source to use: "Simulated" or "Graph".
@@ -28,5 +29,5 @@ public class CollectionOptions
     /// <summary>
     /// Threshold in hours for warning about stale data on the dashboard.
     /// </summary>
-    public int StaleDataThresholdHours { get; set; } = 12;
+    public double StaleDataThresholdHours { get; set; } = 12;
 }

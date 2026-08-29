@@ -1,0 +1,429 @@
+@page "/"
+@page "/dashboard"
+@using _365MigrationTracker.Services
+@using _365MigrationTracker.Data
+@using _365MigrationTracker.Models
+@using _365MigrationTracker.Configuration
+@using Microsoft.EntityFrameworkCore
+@using System.Diagnostics
+@using Microsoft.Extensions.Options
+@inject DashboardDbContext DbContext
+@inject MetricsCollectionService CollectionService
+@inject ProgressCalculationService ProgressService
+@inject IMetricSnapshotStore SnapshotStore
+@inject IOptions<CollectionOptions> CollectionOptions
+@inject ILogger<Dashboard> Logger
+
+<PageTitle>365 Migration Tracker - Dashboard</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="py-8">
+    <!-- Title Section -->
+    <MudStack Spacing="4" Class="mb-8">
+        <div>
+            <MudText Typo="Typo.h3" Class="mb-2">365 Migration Progress</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Default">
+                Track migration progress from on-premises Active Directory to Microsoft Entra ID
+            </MudText>
+        </div>
+    </MudStack>
+
+    <!-- Stale Data Warning -->
+    @if (CurrentSnapshot != null && IsDataStale)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-6">
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+                <span>Latest data is @GetStalenessText(). Last collection: @CurrentSnapshot.CapturedAtUtc.ToString("g")</span>
+            </MudStack>
+        </MudAlert>
+    }
+
+    <!-- Collection Status and Last Updated -->
+    <MudGrid Class="mb-6">
+        <MudItem xs="12" sm="6">
+            <MudCard>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.subtitle2">Last Collection</MudText>
+                        @if (CurrentSnapshot != null)
+                        {
+                            <MudText Typo="Typo.body1">
+                                <strong>@CurrentSnapshot.CapturedAtUtc.ToString("g")</strong>
+                            </MudText>
+                            @if (CurrentSnapshot.CollectionSucceeded)
+                            {
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+                                    <MudText Typo="Typo.body2">Success (@CurrentSnapshot.CollectionDurationMilliseconds ms)</MudText>
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Small" Color="Color.Error" />
+                                    <MudText Typo="Typo.body2">Failed: @CurrentSnapshot.ErrorMessage</MudText>
+                                </MudStack>
+                            }
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">No data collected yet</MudText>
+                        }
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudCard>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.subtitle2">Manual Collection</MudText>
+                        <MudButton
+                            Variant="Variant.Filled"
+                            Color="Color.Primary"
+                            OnClick="CollectNow"
+                            Disabled="CollectionService.IsCollectionInProgress || IsCollecting"
+                            FullWidth="true"
+                            EndIcon="@Icons.Material.Filled.Refresh">
+                            @if (IsCollecting)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Collecting...</MudText>
+                            }
+                            else
+                            {
+                                <span>Collect Now</span>
+                            }
+                        </MudButton>
+                        @if (!string.IsNullOrEmpty(CollectionMessage))
+                        {
+                            <MudAlert Severity="@CollectionMessageSeverity" Class="mt-2">
+                                @CollectionMessage
+                            </MudAlert>
+                        }
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Metric Cards -->
+    @if (CurrentSnapshot != null)
+    {
+        <MudGrid Class="mb-6">
+            <!-- Synced Users -->
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Users still synced from on-premises AD</MudText>
+                            <MudText Typo="Typo.h4">@CurrentSnapshot.SyncedUsers.ToString("N0")</MudText>
+                            @{
+                                var userProgress = ProgressService.CalculateSyncedUsersProgress(CurrentSnapshot, PreviousSnapshot);
+                            }
+                            <MudText Typo="Typo.body2" Color="@(userProgress.IsProgressingWell ? Color.Success : Color.Warning)">
+                                @userProgress.AbsoluteChangeLabel
+                            </MudText>
+                            @if (userProgress.PercentageMigrated.HasValue)
+                            {
+                                    <MudText Typo="Typo.caption">@userProgress.PercentageMigratedLabel migrated</MudText>
+                            }
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Synced Groups -->
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Groups still synced from on-premises AD</MudText>
+                            <MudText Typo="Typo.h4">@CurrentSnapshot.SyncedGroups.ToString("N0")</MudText>
+                            @{
+                                var groupProgress = ProgressService.CalculateSyncedGroupsProgress(CurrentSnapshot, PreviousSnapshot);
+                            }
+                            <MudText Typo="Typo.body2" Color="@(groupProgress.IsProgressingWell ? Color.Success : Color.Warning)">
+                                @groupProgress.AbsoluteChangeLabel
+                            </MudText>
+                            @if (groupProgress.PercentageMigrated.HasValue)
+                            {
+                                    <MudText Typo="Typo.caption">@groupProgress.PercentageMigratedLabel migrated</MudText>
+                            }
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Hybrid Devices -->
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Microsoft Entra hybrid joined devices</MudText>
+                            <MudText Typo="Typo.h4">@CurrentSnapshot.HybridDevices.ToString("N0")</MudText>
+                            @{
+                                var hybridProgress = ProgressService.CalculateHybridDevicesProgress(CurrentSnapshot, PreviousSnapshot);
+                            }
+                            <MudText Typo="Typo.body2" Color="@(hybridProgress.IsProgressingWell ? Color.Success : Color.Warning)">
+                                @hybridProgress.AbsoluteChangeLabel
+                            </MudText>
+                            @if (hybridProgress.PercentageMigrated.HasValue)
+                            {
+                                    <MudText Typo="Typo.caption">@hybridProgress.PercentageMigratedLabel migrated</MudText>
+                            }
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Pending Hybrid Devices -->
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Pending hybrid registrations</MudText>
+                            <MudText Typo="Typo.h4">@CurrentSnapshot.PendingHybridDevices.ToString("N0")</MudText>
+                            <MudText Typo="Typo.body2">Awaiting registration completion</MudText>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Entra Joined Devices -->
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Microsoft Entra joined devices</MudText>
+                            <MudText Typo="Typo.h4">@CurrentSnapshot.EntraJoinedDevices.ToString("N0")</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Success">Migration target</MudText>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Trends Section -->
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Migration Trends</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudStack Spacing="4">
+                    <!-- Date Range Selector -->
+                    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                        <MudButton
+                            Color="@(SelectedDateRange == DateRange.Days7 ? Color.Primary : Color.Default)"
+                            OnClick="@(() => SelectDateRange(DateRange.Days7))">
+                            7 Days
+                        </MudButton>
+                        <MudButton
+                            Color="@(SelectedDateRange == DateRange.Days30 ? Color.Primary : Color.Default)"
+                            OnClick="@(() => SelectDateRange(DateRange.Days30))">
+                            30 Days
+                        </MudButton>
+                        <MudButton
+                            Color="@(SelectedDateRange == DateRange.Days90 ? Color.Primary : Color.Default)"
+                            OnClick="@(() => SelectDateRange(DateRange.Days90))">
+                            90 Days
+                        </MudButton>
+                        <MudButton
+                            Color="@(SelectedDateRange == DateRange.All ? Color.Primary : Color.Default)"
+                            OnClick="@(() => SelectDateRange(DateRange.All))">
+                            All Data
+                        </MudButton>
+                    </MudButtonGroup>
+
+                    @if (TrendData.Count > 1)
+                    {
+                        <div style="height: 400px; width: 100%;">
+                            <MudText Typo="Typo.body2" Color="Color.Default">
+                                Chart would be displayed here - showing @TrendData.Count data points
+                            </MudText>
+                            <MudText Typo="Typo.caption">
+                                Date range: @GetDateRangeText()
+                            </MudText>
+                        </div>
+                    }
+                    else if (TrendData.Count == 1)
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            Only one snapshot available. Collect more data to see trends.
+                        </MudAlert>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Recent Failures -->
+        @if (RecentFailures.Count > 0)
+        {
+            <MudCard Class="mt-6">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Recent Collection Failures</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudSimpleTable Striped="true" Dense="true">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var failure in RecentFailures.Take(5))
+                            {
+                                <tr>
+                                    <td>@failure.CapturedAtUtc.ToString("g")</td>
+                                    <td>@failure.ErrorMessage</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCardContent>
+            </MudCard>
+        }
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">
+            No metrics collected yet. Click "Collect Now" to start tracking migration progress.
+        </MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private enum DateRange { Days7, Days30, Days90, All }
+    private DateRange SelectedDateRange = DateRange.Days30;
+
+    private MetricSnapshot? CurrentSnapshot;
+    private MetricSnapshot? PreviousSnapshot;
+    private List<MetricSnapshot> TrendData = new();
+    private List<MetricSnapshot> RecentFailures = new();
+
+    private bool IsCollecting = false;
+    private string? CollectionMessage;
+    private Severity CollectionMessageSeverity = Severity.Info;
+
+    private bool IsDataStale => CurrentSnapshot != null &&
+        (DateTime.UtcNow - CurrentSnapshot.CapturedAtUtc).TotalHours >
+        CollectionOptions.Value.StaleDataThresholdHours;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            // Load current snapshot
+            CurrentSnapshot = await SnapshotStore.GetLatestSuccessfulSnapshotAsync();
+
+            // Load previous snapshot for comparison
+            if (CurrentSnapshot != null)
+            {
+                var previousSnapshots = await SnapshotStore.GetSuccessfulSnapshotsAsync(
+                    DateTime.MinValue,
+                    CurrentSnapshot.CapturedAtUtc.AddSeconds(-1));
+
+                PreviousSnapshot = previousSnapshots.LastOrDefault();
+            }
+
+            // Load trend data based on selected range
+            await LoadTrendData();
+
+            // Load recent failures
+            RecentFailures = (await SnapshotStore.GetRecentFailuresAsync(10)).ToList();
+
+            CollectionMessage = null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading dashboard data");
+            CollectionMessage = "Error loading data. Please refresh.";
+            CollectionMessageSeverity = Severity.Error;
+        }
+    }
+
+    private async Task LoadTrendData()
+    {
+        var startDate = SelectedDateRange switch
+        {
+            DateRange.Days7 => DateTime.UtcNow.AddDays(-7),
+            DateRange.Days30 => DateTime.UtcNow.AddDays(-30),
+            DateRange.Days90 => DateTime.UtcNow.AddDays(-90),
+            _ => DateTime.MinValue
+        };
+
+        TrendData = (await SnapshotStore.GetSuccessfulSnapshotsAsync(
+            startDate,
+            DateTime.UtcNow)).ToList();
+    }
+
+    private async Task CollectNow()
+    {
+        IsCollecting = true;
+        CollectionMessage = null;
+
+        try
+        {
+            var result = await CollectionService.CollectAsync();
+
+            if (result != null)
+            {
+                CollectionMessage = "Collection completed successfully!";
+                CollectionMessageSeverity = Severity.Success;
+                await LoadData();
+            }
+            else
+            {
+                CollectionMessage = "Collection already in progress. Please wait.";
+                CollectionMessageSeverity = Severity.Warning;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during manual collection");
+            CollectionMessage = string.Concat("Collection failed: ", ex.Message);
+            CollectionMessageSeverity = Severity.Error;
+        }
+        finally
+        {
+            IsCollecting = false;
+        }
+    }
+
+    private async Task SelectDateRange(DateRange range)
+    {
+        SelectedDateRange = range;
+        await LoadTrendData();
+    }
+
+    private string GetDateRangeText() => SelectedDateRange switch
+    {
+        DateRange.Days7 => "Last 7 days",
+        DateRange.Days30 => "Last 30 days",
+        DateRange.Days90 => "Last 90 days",
+        DateRange.All => "All data",
+        _ => "Unknown"
+    };
+
+    private string GetStalenessText()
+    {
+        if (CurrentSnapshot == null) return "never";
+        var age = DateTime.UtcNow - CurrentSnapshot.CapturedAtUtc;
+        if (age.TotalHours >= 1)
+            return $"{(int)age.TotalHours} hours old";
+        if (age.TotalMinutes >= 1)
+            return $"{(int)age.TotalMinutes} minutes old";
+        return "just now";
+    }
+}

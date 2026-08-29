@@ -1,4 +1,5 @@
 using _365MigrationTracker.Components;
+using _365MigrationTracker.Configuration;
 using _365MigrationTracker.Data;
 using _365MigrationTracker.Services;
 using MudBlazor.Services;
@@ -15,8 +16,16 @@ var connectionString = $"Data Source={dbPath}";
 builder.Services.AddDbContext<DashboardDbContext>(options =>
     options.UseSqlite(connectionString));
 
+// Configure collection options
+builder.Services.Configure<CollectionOptions>(
+    builder.Configuration.GetSection(CollectionOptions.SectionName));
+
 // Register services
 builder.Services.AddScoped<IMetricSnapshotStore, SqliteMetricSnapshotStore>();
+builder.Services.AddScoped<IMigrationMetricsSource, SimulatedMetricsSource>();
+builder.Services.AddScoped<MetricsCollectionService>();
+builder.Services.AddScoped<ProgressCalculationService>();
+builder.Services.AddHostedService<MetricsCollectionBackgroundService>();
 
 builder.Services.AddMudServices();
 

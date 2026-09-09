@@ -1,4 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime JS
+@inject IGraphAccessProvider GraphAccess
+@inject NavigationManager Navigation
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
@@ -16,9 +20,10 @@
         @* <Logo /> *@
 
         @* Dark mode button *@
-        <MudToggleIconButton @bind-Toggled="_isDarkMode" @onclick="EnableDarkMode"
-        Icon="@Icons.Material.Outlined.DarkMode" Color="@MudBlazor.Color.Inherit" Title="DarkMode"
-        ToggledIcon="@Icons.Material.Filled.WbSunny" ToggledTitle="LightMode" />
+        <MudToggleIconButton @bind-Toggled="_isDarkMode" @bind-Toggled:after="OnDarkModeToggled"
+        Icon="@Icons.Material.Outlined.DarkMode" Color="@MudBlazor.Color.Inherit"
+        ToggledIcon="@Icons.Material.Filled.WbSunny"
+        title="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")" />
 
         @* Refresh data button *@
         @* <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="MudBlazor.Color.Inherit" Title="Refresh data" OnClick="RefreshDataClicked" /> *@
@@ -39,19 +44,91 @@
         </MudMessageBox>
 
         @* About message box*@
-        <About />
+        @* <About /> *@
 
-                @* Login menu. Shows the Login Display, and user details if clicked on. *@
-        <MudMenu AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopRight">
-            <ActivatorContent>
-                @* <LoginDisplay /> *@
-            </ActivatorContent>
-            <ChildContent>
-                <MudPaper Elevation="0" Style="padding: 10px">
-                    @* <Me /> *@
-                </MudPaper>
-            </ChildContent>
-        </MudMenu>
+        @* Signed-in user, with sign out. *@
+        <AuthorizeView Context="auth">
+            <Authorized>
+                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                    @* A photo needs ActivatorContent, because MudMenu's built-in activator
+                       only accepts an icon name.
+
+                       MudMenu does NOT wire a click onto ActivatorContent - its wrapper div
+                       has @onkeydown only. Instead it hands the content a MenuContext, and
+                       the content is responsible for calling ToggleAsync. That is why both
+                       a MudButton and a bare MudStack here did nothing.
+
+                       A plain div, not a MudStack: @onclick binds to elements, whereas on a
+                       component it would need an explicit parameter to be honoured. *@
+                    <ActivatorContent Context="menu">
+                        @* Avatar only - the name and email live in the popup. *@
+                        <div class="d-flex align-center px-2"
+                             style="cursor: pointer;"
+                             title="@GetDisplayName(auth.User)"
+                             @onclick="@(() => menu.ToggleAsync())">
+                            @if (_photoDataUri is not null)
+                            {
+                                <MudAvatar Size="Size.Small">
+                                    <MudImage Src="@_photoDataUri" Alt="Profile photo" />
+                                </MudAvatar>
+                            }
+                            else
+                            {
+                                <MudAvatar Size="Size.Small" Color="MudBlazor.Color.Primary">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                                </MudAvatar>
+                            }
+                        </div>
+                    </ActivatorContent>
+
+                    <ChildContent>
+                        <MudPaper Elevation="0" Class="pa-4" Style="min-width: 280px;">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-3">
+                                @if (_photoDataUri is not null)
+                                {
+                                    <MudAvatar Size="Size.Medium">
+                                        <MudImage Src="@_photoDataUri" Alt="Profile photo" />
+                                    </MudAvatar>
+                                }
+                                else
+                                {
+                                    <MudAvatar Size="Size.Medium" Color="MudBlazor.Color.Primary">
+                                        <MudIcon Icon="@Icons.Material.Filled.Person" />
+                                    </MudAvatar>
+                                }
+                                <div>
+                                    <MudText Typo="Typo.subtitle1">@GetDisplayName(auth.User)</MudText>
+                                    <MudText Typo="Typo.body2">@auth.User.Identity?.Name</MudText>
+                                    <MudText Typo="Typo.caption">Tenant ID: @GetTenantId(auth.User)</MudText>
+                                </div>
+                            </MudStack>
+
+                            <MudDivider Class="mb-3" />
+
+                            @* OnClick rather than Href: sign-out is a server endpoint, not
+                               a Blazor route, so it needs a forced full navigation.
+                               MudButton has no ForceLoad parameter - it is only on
+                               MudMenuItem - and passing one is silently ignored. *@
+                            <MudButton OnClick="SignOut"
+                                       Variant="Variant.Filled"
+                                       Color="MudBlazor.Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Logout"
+                                       FullWidth="true">
+                                Sign out
+                            </MudButton>
+                        </MudPaper>
+                    </ChildContent>
+                </MudMenu>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Href="MicrosoftIdentity/Account/SignIn"
+                           Variant="Variant.Text"
+                           Color="MudBlazor.Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Login">
+                    Sign in
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
@@ -64,7 +141,7 @@
         </MudContainer>
     </MudMainContent>
     <MudScrollToTop>
-        <MudFab Color="MudBlazor.Color.Tertiary" Icon="@Icons.Material.Filled.ArrowCircleUp" />
+        <MudFab Color="MudBlazor.Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" />
     </MudScrollToTop>
 </MudLayout>
 </CascadingValue>
@@ -85,20 +162,37 @@
     private bool _isDarkMode;
     string headerStyle = "drawer-image-dark";
 
-    // Method to allow saving of dark mode to local storage
-    private async Task EnableDarkMode()
+    private const string DarkModeStorageKey = "darkmode";
+
+    // The "name" claim carries the display name. Identity.Name is the UPN/email, since
+    // Microsoft.Identity.Web maps it from preferred_username - so the two are different
+    // things and the popup shows both.
+    private static string GetDisplayName(System.Security.Claims.ClaimsPrincipal user) =>
+        user.FindFirst("name")?.Value
+        ?? user.Identity?.Name
+        ?? "Signed in";
+
+    // Shown in the account menu so it is obvious whose tenant the figures belong to -
+    // useful when supporting a customer and when several tenants are in play.
+    private static string GetTenantId(System.Security.Claims.ClaimsPrincipal user) =>
+        user.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid")?.Value
+        ?? user.FindFirst("tid")?.Value
+        ?? "unknown";
+
+    // Runs after @bind-Toggled has already flipped _isDarkMode, so this only
+    // persists the new value - it must not toggle it again.
+    private async Task OnDarkModeToggled()
     {
-        if (_isDarkMode)
+        headerStyle = _isDarkMode ? "drawer-image-light" : "drawer-image-dark";
+
+        try
         {
-            _isDarkMode = false;
-            @* await localStorage.SetItemAsync("darkmode", false); *@
-            headerStyle = "drawer-image-dark";
+            await LocalStorage.SetItemAsync(DarkModeStorageKey, _isDarkMode);
         }
-        else
+        catch (Exception)
         {
-            _isDarkMode = true;
-            @* await localStorage.SetItemAsync("darkmode", true); *@
-            headerStyle = "drawer-image-light";
+            // Storage can be unavailable (private browsing, blocked site data).
+            // The toggle still works for this session; it just won't be remembered.
         }
     }
 
@@ -128,16 +222,67 @@
     MudForm? settingsForm;
 
 
-    @*OnInitializedAsync*@
-    protected override async Task OnInitializedAsync()
-    {
-        // Load dashboard component toggles
-        @* await Settings.LoadAsync(); *@
+    private bool _preloadCleared;
 
-        // Load dark mode setting from localStorage
-        @* var result1 = await localStorage.GetItemAsync<bool>("darkmode"); *@
-        @* _isDarkMode = result1 ? result1 : false;
-        if (_isDarkMode) { headerStyle = "drawer-image-light"; } *@
+    // Cached for the life of the circuit. The photo is a few KB of base64 and does not
+    // change during a session, so it is fetched once rather than on every render.
+    private string? _photoDataUri;
+
+    private void SignOut() =>
+        Navigation.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true);
+
+    // localStorage is only reachable once the circuit is live - JS interop cannot run
+    // during server-side prerendering - so the saved preference is read on first render
+    // rather than in OnInitializedAsync. Until then the pre-paint class in App.razor is
+    // what's holding the dark palette in place.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Fetched here rather than in OnInitializedAsync so it happens once the
+            // circuit is live, and so a slow Graph call cannot delay first paint.
+            var photo = await GraphAccess.GetUserPhotoDataUriAsync();
+            if (photo is not null)
+            {
+                _photoDataUri = photo;
+                StateHasChanged();
+            }
+
+            bool saved = false;
+            try
+            {
+                saved = await LocalStorage.GetItemAsync<bool>(DarkModeStorageKey);
+            }
+            catch (Exception)
+            {
+                // No stored preference, or storage unavailable - keep the light-mode default.
+            }
+
+            if (saved != _isDarkMode)
+            {
+                _isDarkMode = saved;
+                headerStyle = _isDarkMode ? "drawer-image-light" : "drawer-image-dark";
+                StateHasChanged();
+
+                // Hand off to the next render pass: the preload class must stay until
+                // MudThemeProvider has actually painted dark, or removing it flashes light.
+                return;
+            }
+        }
+
+        if (!_preloadCleared)
+        {
+            _preloadCleared = true;
+            try
+            {
+                await JS.InvokeVoidAsync("clearDarkModePreload");
+            }
+            catch (Exception)
+            {
+                // Non-fatal: the class only overrides palette variables that
+                // MudThemeProvider is now setting to the same values anyway.
+            }
+        }
     }
     // Reset all settings to defaults
     private async Task ResetAllSettings()

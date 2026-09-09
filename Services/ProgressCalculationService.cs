@@ -10,70 +10,73 @@ namespace _365MigrationTracker.Services;
 public class ProgressCalculationService
 {
     /// <summary>
-    /// Baseline counts used as the starting point for migration progress.
-    /// These represent the state at the beginning of migration.
-    /// </summary>
-    public class Baselines
-    {
-        public int SyncedUsers { get; set; } = 5000;
-        public int SyncedGroups { get; set; } = 250;
-        public int HybridDevices { get; set; } = 3500;
-    }
-
-    /// <summary>
     /// Calculate progress for synced users.
+    /// Migrated means no longer synced from on-premises AD, measured against the
+    /// tenant's current user total.
     /// </summary>
     public ProgressMetrics CalculateSyncedUsersProgress(
         MetricSnapshot? current,
-        MetricSnapshot? previous,
-        Baselines? baselines = null)
+        MetricSnapshot? previous)
     {
-        baselines ??= new Baselines();
+        var synced = current?.SyncedUsers ?? 0;
+        var total = current?.TotalUsers ?? 0;
+
         return CalculateProgress(
-            current?.SyncedUsers ?? 0,
+            synced,
             previous?.SyncedUsers,
-            baselines.SyncedUsers);
+            total,
+            migratedCount: Math.Max(0, total - synced));
     }
 
     /// <summary>
     /// Calculate progress for synced groups.
+    /// Migrated means no longer synced from on-premises AD, measured against the
+    /// tenant's current group total.
     /// </summary>
     public ProgressMetrics CalculateSyncedGroupsProgress(
         MetricSnapshot? current,
-        MetricSnapshot? previous,
-        Baselines? baselines = null)
+        MetricSnapshot? previous)
     {
-        baselines ??= new Baselines();
+        var synced = current?.SyncedGroups ?? 0;
+        var total = current?.TotalGroups ?? 0;
+
         return CalculateProgress(
-            current?.SyncedGroups ?? 0,
+            synced,
             previous?.SyncedGroups,
-            baselines.SyncedGroups);
+            total,
+            migratedCount: Math.Max(0, total - synced));
     }
 
     /// <summary>
     /// Calculate progress for hybrid devices.
+    /// Devices differ from users and groups: a device that has left hybrid join has not
+    /// necessarily been migrated, because the tenant also holds devices that are neither
+    /// hybrid nor Entra joined (workplace/registered). Only Entra joined counts as migrated.
     /// </summary>
     public ProgressMetrics CalculateHybridDevicesProgress(
         MetricSnapshot? current,
-        MetricSnapshot? previous,
-        Baselines? baselines = null)
+        MetricSnapshot? previous)
     {
-        baselines ??= new Baselines();
         return CalculateProgress(
             current?.HybridDevices ?? 0,
             previous?.HybridDevices,
-            baselines.HybridDevices);
+            current?.TotalDevices ?? 0,
+            migratedCount: current?.EntraJoinedDevices ?? 0);
     }
 
     /// <summary>
     /// Generic progress calculation.
     /// </summary>
-    private ProgressMetrics CalculateProgress(int current, int? previous, int baseline)
+    /// <param name="current">Current count of the metric being tracked.</param>
+    /// <param name="previous">Previous count, for change-over-time; null if unavailable.</param>
+    /// <param name="total">Denominator for percentage migrated. Zero suppresses the percentage.</param>
+    /// <param name="migratedCount">How many objects count as migrated.</param>
+    private ProgressMetrics CalculateProgress(int current, int? previous, int total, int migratedCount)
     {
         var progress = new ProgressMetrics
         {
             CurrentCount = current,
-            BaselineCount = baseline
+            BaselineCount = total
         };
 
         // Calculate absolute change
@@ -89,11 +92,12 @@ public class ProgressCalculationService
             }
         }
 
-        // Calculate percentage migrated
-        if (baseline > 0)
+        // Percentage migrated. Snapshots collected before totals were recorded have a
+        // total of 0; leaving this null makes the dashboard hide the figure rather than
+        // show a fabricated one.
+        if (total > 0)
         {
-            progress.PercentageMigrated = ((decimal)(baseline - current) / baseline) * 100;
-            // Ensure it doesn't exceed 100% or go below 0%
+            progress.PercentageMigrated = ((decimal)migratedCount / total) * 100;
             progress.PercentageMigrated = Math.Max(0, Math.Min(100, progress.PercentageMigrated.Value));
         }
 

@@ -12,7 +12,11 @@
 @inject ProgressCalculationService ProgressService
 @inject IMetricSnapshotStore SnapshotStore
 @inject IOptions<CollectionOptions> CollectionOptions
+@inject IGraphAccessProvider GraphAccess
+@inject SnapshotOnVisitService SnapshotOnVisit
+@inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
 @inject ILogger<Dashboard> Logger
+@attribute [Authorize]
 
 <PageTitle>365 Migration Tracker - Dashboard</PageTitle>
 
@@ -20,7 +24,7 @@
     <!-- Title Section -->
     <MudStack Spacing="4" Class="mb-8">
         <div>
-            <MudText Typo="Typo.h3" Class="mb-2">365 Migration Progress</MudText>
+            <MudText Typo="Typo.h4" Class="mb-2">365 Migration Progress</MudText>
             <MudText Typo="Typo.body2" Color="Color.Default">
                 Track migration progress from on-premises Active Directory to Microsoft Entra ID
             </MudText>
@@ -79,12 +83,14 @@
                 <MudCardContent>
                     <MudStack Spacing="2">
                         <MudText Typo="Typo.subtitle2">Manual Collection</MudText>
+                        @* Sized to its content. MudStack is a flex column, so without
+                           align-self the button stretches to the full tile width. *@
                         <MudButton
                             Variant="Variant.Filled"
                             Color="Color.Primary"
                             OnClick="CollectNow"
                             Disabled="CollectionService.IsCollectionInProgress || IsCollecting"
-                            FullWidth="true"
+                            Style="align-self: flex-start;"
                             EndIcon="@Icons.Material.Filled.Refresh">
                             @if (IsCollecting)
                             {
@@ -107,6 +113,126 @@
             </MudCard>
         </MudItem>
     </MudGrid>
+
+    <!-- Migration Split Donut Charts -->
+    @if (CurrentSnapshot != null)
+    {
+        <MudGrid Class="mb-6">
+            <!-- Users Donut -->
+            <MudItem xs="12" md="4">
+                <MudCard Class="pa-2 detail-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Users</MudText>
+                            <MudText Typo="Typo.caption">@CurrentSnapshot.TotalUsers.ToString("N0") total</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                           Href="/details/users"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           Class="detail-link"
+                                           title="View all users" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Class="d-flex flex-column align-center">
+                        @if (CurrentSnapshot.TotalUsers > 0)
+                        {
+                            <MudChart T="double"
+                                      ChartType="ChartType.Donut"
+                                      Width="220px"
+                                      Height="220px"
+                                      ChartSeries="@UsersSeries"
+                                      ChartLabels="@UsersChartLabels"
+                                      ChartOptions="@SplitChartOptions" />
+                            <MudText Typo="Typo.h5" Class="mt-3">@FormatPercent(EntraOnlyUsers, CurrentSnapshot.TotalUsers)</MudText>
+                            <MudText Typo="Typo.caption">cloud only</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">No data</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Groups Donut -->
+            <MudItem xs="12" md="4">
+                <MudCard Class="pa-2 detail-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Groups</MudText>
+                            <MudText Typo="Typo.caption">@CurrentSnapshot.TotalGroups.ToString("N0") total</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                           Href="/details/groups"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           Class="detail-link"
+                                           title="View all groups" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Class="d-flex flex-column align-center">
+                        @if (CurrentSnapshot.TotalGroups > 0)
+                        {
+                            <MudChart T="double"
+                                      ChartType="ChartType.Donut"
+                                      Width="220px"
+                                      Height="220px"
+                                      ChartSeries="@GroupsSeries"
+                                      ChartLabels="@GroupsChartLabels"
+                                      ChartOptions="@SplitChartOptions" />
+                            <MudText Typo="Typo.h5" Class="mt-3">@FormatPercent(EntraOnlyGroups, CurrentSnapshot.TotalGroups)</MudText>
+                            <MudText Typo="Typo.caption">cloud only</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">No data</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Devices Donut -->
+            <MudItem xs="12" md="4">
+                <MudCard Class="pa-2 detail-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Windows devices</MudText>
+                            <MudText Typo="Typo.caption">@CurrentSnapshot.TotalDevices.ToString("N0") total</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                           Href="/details/devices"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           Class="detail-link"
+                                           title="View all devices" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Class="d-flex flex-column align-center">
+                        @if (CurrentSnapshot.TotalDevices > 0)
+                        {
+                            <MudChart T="double"
+                                      ChartType="ChartType.Donut"
+                                      Width="220px"
+                                      Height="220px"
+                                      ChartSeries="@DevicesSeries"
+                                      ChartLabels="@DevicesChartLabels"
+                                      ChartOptions="@SplitChartOptions" />
+                            <MudText Typo="Typo.h5" Class="mt-3">@FormatPercent(CurrentSnapshot.EntraJoinedDevices, CurrentSnapshot.TotalDevices)</MudText>
+                            <MudText Typo="Typo.caption">Entra joined</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">No data</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
 
     <!-- Metric Cards -->
     @if (CurrentSnapshot != null)
@@ -178,31 +304,6 @@
                 </MudCard>
             </MudItem>
 
-            <!-- Pending Hybrid Devices -->
-            <MudItem xs="12" sm="6" md="3">
-                <MudCard>
-                    <MudCardContent>
-                        <MudStack Spacing="2">
-                            <MudText Typo="Typo.subtitle2">Pending hybrid registrations</MudText>
-                            <MudText Typo="Typo.h4">@CurrentSnapshot.PendingHybridDevices.ToString("N0")</MudText>
-                            <MudText Typo="Typo.body2">Awaiting registration completion</MudText>
-                        </MudStack>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-
-            <!-- Entra Joined Devices -->
-            <MudItem xs="12" sm="6" md="3">
-                <MudCard>
-                    <MudCardContent>
-                        <MudStack Spacing="2">
-                            <MudText Typo="Typo.subtitle2">Microsoft Entra joined devices</MudText>
-                            <MudText Typo="Typo.h4">@CurrentSnapshot.EntraJoinedDevices.ToString("N0")</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Success">Migration target</MudText>
-                        </MudStack>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
         </MudGrid>
 
         <!-- Trends Section -->
@@ -240,19 +341,27 @@
 
                     @if (TrendData.Count > 1)
                     {
-                        <div style="height: 400px; width: 100%;">
-                            <MudText Typo="Typo.body2" Color="Color.Default">
-                                Chart would be displayed here - showing @TrendData.Count data points
-                            </MudText>
-                            <MudText Typo="Typo.caption">
-                                Date range: @GetDateRangeText()
-                            </MudText>
-                        </div>
+                        <MudChart T="double"
+                                  ChartType="ChartType.Timeseries"
+                                  ChartSeries="@TrendSeries"
+                                  ChartOptions="@TrendChartOptions"
+                                  Width="100%"
+                                  Height="400px" />
+                        <MudText Typo="Typo.caption">
+                            @GetDateRangeText() &middot; @TrendData.Count data points &middot; lower is better
+                        </MudText>
                     }
                     else if (TrendData.Count == 1)
                     {
                         <MudAlert Severity="Severity.Info">
-                            Only one snapshot available. Collect more data to see trends.
+                            Only one snapshot in @GetDateRangeText().
+                            Trends appear once a second collection has run.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">
+                            No snapshots in @GetDateRangeText().
                         </MudAlert>
                     }
                 </MudStack>
@@ -315,22 +424,204 @@
         (DateTime.UtcNow - CurrentSnapshot.CapturedAtUtc).TotalHours >
         CollectionOptions.Value.StaleDataThresholdHours;
 
+    // Donut chart palette: amber for on-premises (work remaining), green for cloud (migrated)
+    //
+    // TooltipTitleFormat must live on ChartOptions, not ChartSeries. BaseRadialChart does:
+    //     series?.TooltipTitleFormat ?? ChartOptions.TooltipTitleFormat
+    // where `series` is only non-null under AggregationOption.GroupByDataSet. These donuts
+    // are a single series of many slices, so the series-level format is never consulted.
+    //
+    // The tags are also the reverse of what the names suggest, per Donut.razor.cs:
+    //   {{X_VALUE}} -> the slice's numeric value   (LabelXValue)
+    //   {{Y_VALUE}} -> the slice's label           (LabelYValue)
+    private readonly ChartOptions SplitChartOptions = new()
+    {
+        ChartPalette = new[] { "#F5A623", "#2E9E5B", "#9E9E9E" },
+        TooltipTitleFormat = "{{Y_VALUE}}: {{X_VALUE}}"
+    };
+
+    // Non-negative so a stale total never produces a negative slice
+    private int EntraOnlyUsers => CurrentSnapshot == null
+        ? 0
+        : Math.Max(0, CurrentSnapshot.TotalUsers - CurrentSnapshot.SyncedUsers);
+
+    private int EntraOnlyGroups => CurrentSnapshot == null
+        ? 0
+        : Math.Max(0, CurrentSnapshot.TotalGroups - CurrentSnapshot.SyncedGroups);
+
+    // Devices that are neither hybrid joined nor Entra joined (e.g. workplace registered)
+    private int OtherDevices => CurrentSnapshot == null
+        ? 0
+        : Math.Max(0, CurrentSnapshot.TotalDevices - CurrentSnapshot.HybridDevices - CurrentSnapshot.EntraJoinedDevices);
+
+    private double[] UsersChartData => CurrentSnapshot == null
+        ? Array.Empty<double>()
+        : new double[] { CurrentSnapshot.SyncedUsers, EntraOnlyUsers };
+
+    private string[] UsersChartLabels => new[] { "Synced from AD", "Entra only" };
+
+    private double[] GroupsChartData => CurrentSnapshot == null
+        ? Array.Empty<double>()
+        : new double[] { CurrentSnapshot.SyncedGroups, EntraOnlyGroups };
+
+    private string[] GroupsChartLabels => new[] { "Synced from AD", "Entra only" };
+
+    private double[] DevicesChartData
+    {
+        get
+        {
+            if (CurrentSnapshot == null) return Array.Empty<double>();
+
+            var data = new List<double> { CurrentSnapshot.HybridDevices, CurrentSnapshot.EntraJoinedDevices };
+            if (OtherDevices > 0) data.Add(OtherDevices);
+            return data.ToArray();
+        }
+    }
+
+    private string[] DevicesChartLabels
+    {
+        get
+        {
+            var labels = new List<string> { "Hybrid joined", "Entra joined" };
+            if (OtherDevices > 0) labels.Add("Other");
+            return labels.ToArray();
+        }
+    }
+
+    // Trend chart. Timeseries rather than Line because snapshots are not evenly spaced:
+    // the background service runs every 6 hours but "Collect Now" inserts extra points
+    // whenever it is clicked. A Line chart would space those equally and misrepresent the
+    // gaps; Timeseries positions each point by its actual timestamp.
+    //
+    // These are the three "still on-premises" counts, matching the tiles below the donuts,
+    // so the whole lower half of the dashboard reads as work remaining. All three are the
+    // same order of magnitude, so they share one axis honestly.
+    private TimeSeriesChartOptions TrendChartOptions => new()
+    {
+        TimeLabelFormat = "dd MMM HH:mm",
+        TimeLabelSpacing = TrendLabelSpacing,
+        TooltipTimeLabelFormat = "dd MMM yyyy HH:mm",
+        TooltipTitleFormat = "{{SERIES_NAME}}: {{Y_VALUE}}",
+
+        // Anchor the axis at zero. Without this the axis fits the data range, which for
+        // three series sitting between 100 and 174 pins the lowest flat against the
+        // bottom and visually exaggerates how far apart they are. These are counts, so
+        // zero is a meaningful floor and the proportions should be read literally.
+        YAxisRequireZeroPoint = true
+    };
+
+    // TimeLabelSpacing defaults to 5 minutes, which puts one label on the axis per
+    // snapshot at a short collection interval. Derive it from the span actually on
+    // screen so the axis carries roughly eight labels whatever the range.
+    private TimeSpan TrendLabelSpacing
+    {
+        get
+        {
+            if (TrendData.Count < 2) return TimeSpan.FromHours(6);
+
+            var span = TrendData.Max(s => s.CapturedAtUtc) - TrendData.Min(s => s.CapturedAtUtc);
+            var target = span / 8;
+
+            return target < TimeSpan.FromMinutes(15) ? TimeSpan.FromMinutes(15) : target;
+        }
+    }
+
+    private List<ChartSeries<double>> TrendSeries => new()
+    {
+        new ChartSeries<double>
+        {
+            Name = "Users synced from AD",
+            Data = TrendPoints(s => s.SyncedUsers)
+        },
+        new ChartSeries<double>
+        {
+            Name = "Groups synced from AD",
+            Data = TrendPoints(s => s.SyncedGroups)
+        },
+        new ChartSeries<double>
+        {
+            Name = "Hybrid joined devices",
+            Data = TrendPoints(s => s.HybridDevices)
+        }
+    };
+
+    // Snapshots are stored in UTC; the axis reads better in the viewer's local time.
+    private List<(DateTime, double)> TrendPoints(Func<MetricSnapshot, int> selector) =>
+        TrendData
+            .OrderBy(s => s.CapturedAtUtc)
+            .Select(s => (s.CapturedAtUtc.ToLocalTime(), (double)selector(s)))
+            .ToList();
+
+    // Tooltip formatting lives on SplitChartOptions - see the note there for why the
+    // series-level tooltip properties are inert for a single-series donut.
+    private List<ChartSeries<double>> UsersSeries => new()
+    {
+        new ChartSeries<double> { Name = "Users", Data = UsersChartData }
+    };
+
+    private List<ChartSeries<double>> GroupsSeries => new()
+    {
+        new ChartSeries<double> { Name = "Groups", Data = GroupsChartData }
+    };
+
+    private List<ChartSeries<double>> DevicesSeries => new()
+    {
+        new ChartSeries<double> { Name = "Devices", Data = DevicesChartData }
+    };
+
+    private static string FormatPercent(int part, int total) =>
+        total <= 0 ? "-" : $"{(double)part / total * 100:F1}%";
+
+    // Tenant of the signed-in user. Every store read is scoped to it - see IMetricSnapshotStore.
+    private string? TenantId;
+
     protected override async Task OnInitializedAsync()
     {
+        TenantId = await GraphAccess.GetTenantIdAsync();
+
+        // Opportunistic history: there is no background collector any more, so the act
+        // of opening the dashboard is what records a data point (throttled per tenant).
+        try
+        {
+            await SnapshotOnVisit.CollectIfDueAsync();
+        }
+        catch (MicrosoftIdentityWebChallengeUserException ex)
+        {
+            // The auth cookie outlived the token cache - most often an app restart,
+            // since the token cache is in memory. The user looks signed in but Graph
+            // cannot be called for them. Bounce them through sign-in to rebuild it
+            // rather than rendering a dashboard full of zeros.
+            ConsentHandler.HandleException(ex);
+            return;
+        }
+        catch (Exception ex)
+        {
+            // Any other collection failure must not stop existing data from rendering.
+            Logger.LogError(ex, "Visit-triggered collection failed");
+        }
+
         await LoadData();
     }
 
     private async Task LoadData()
     {
+        if (string.IsNullOrWhiteSpace(TenantId))
+        {
+            CollectionMessage = "No tenant could be determined for the signed-in user.";
+            CollectionMessageSeverity = Severity.Error;
+            return;
+        }
+
         try
         {
             // Load current snapshot
-            CurrentSnapshot = await SnapshotStore.GetLatestSuccessfulSnapshotAsync();
+            CurrentSnapshot = await SnapshotStore.GetLatestSuccessfulSnapshotAsync(TenantId);
 
             // Load previous snapshot for comparison
             if (CurrentSnapshot != null)
             {
                 var previousSnapshots = await SnapshotStore.GetSuccessfulSnapshotsAsync(
+                    TenantId,
                     DateTime.MinValue,
                     CurrentSnapshot.CapturedAtUtc.AddSeconds(-1));
 
@@ -341,7 +632,7 @@
             await LoadTrendData();
 
             // Load recent failures
-            RecentFailures = (await SnapshotStore.GetRecentFailuresAsync(10)).ToList();
+            RecentFailures = (await SnapshotStore.GetRecentFailuresAsync(TenantId, 10)).ToList();
 
             CollectionMessage = null;
         }
@@ -355,6 +646,12 @@
 
     private async Task LoadTrendData()
     {
+        if (string.IsNullOrWhiteSpace(TenantId))
+        {
+            TrendData = new();
+            return;
+        }
+
         var startDate = SelectedDateRange switch
         {
             DateRange.Days7 => DateTime.UtcNow.AddDays(-7),
@@ -364,6 +661,7 @@
         };
 
         TrendData = (await SnapshotStore.GetSuccessfulSnapshotsAsync(
+            TenantId,
             startDate,
             DateTime.UtcNow)).ToList();
     }
@@ -388,6 +686,15 @@
                 CollectionMessage = "Collection already in progress. Please wait.";
                 CollectionMessageSeverity = Severity.Warning;
             }
+        }
+        catch (MicrosoftIdentityWebChallengeUserException ex)
+        {
+            // Re-authentication needed. Showing the raw IDW10502 text tells the user
+            // nothing they can act on - redirect them through sign-in instead, which
+            // rebuilds the token cache and returns them here.
+            IsCollecting = false;
+            ConsentHandler.HandleException(ex);
+            return;
         }
         catch (Exception ex)
         {

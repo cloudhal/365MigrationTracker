@@ -2,6 +2,31 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* Drill-down link on the dashboard's chart tiles.
+   Revealed on hover so the tiles stay uncluttered at rest.
+
+   Deliberately opacity rather than display:none, so the header does not reflow
+   when the icon appears. Kept visible on keyboard focus, and always visible where
+   the device has no hover at all - on touch an opacity:0 control is undiscoverable.
+
+   Global rather than scoped CSS: both MudCard and MudIconButton are child
+   components, so their root elements never receive this page's scope attribute. */
+.detail-card .detail-link {
+    opacity: 0;
+    transition: opacity 120ms ease-in-out;
+}
+
+.detail-card:hover .detail-link,
+.detail-card:focus-within .detail-link {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .detail-card .detail-link {
+        opacity: 1;
+    }
+}
+
 a, .btn-link {
     color: #006bb7;
 }

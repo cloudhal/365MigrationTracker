@@ -1,6 +1,33 @@
-﻿<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+@using Microsoft.AspNetCore.Components.Authorization
+
+<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        @* AuthorizeRouteView so an unauthenticated visitor is redirected to sign in
+           rather than shown a broken page. RedirectToLogin handles the redirect. *@
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                @if (context.User.Identity?.IsAuthenticated != true)
+                {
+                    <RedirectToLogin />
+                }
+                else
+                {
+                    <MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+                        <MudAlert Severity="Severity.Warning">
+                            <MudText Typo="Typo.h6" Class="mb-2">Access denied</MudText>
+                            <MudText Typo="Typo.body2">
+                                You are signed in, but your account has not been granted access to
+                                this dashboard. Ask your administrator to assign you on the
+                                application's Users and groups page in Microsoft Entra.
+                            </MudText>
+                        </MudAlert>
+                    </MudContainer>
+                }
+            </NotAuthorized>
+            <Authorizing>
+                <MudProgressLinear Indeterminate="true" />
+            </Authorizing>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>

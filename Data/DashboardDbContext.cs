@@ -23,6 +23,10 @@ public class DashboardDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
 
+            entity.Property(e => e.TenantId)
+                .IsRequired()
+                .HasMaxLength(64);
+
             entity.Property(e => e.CapturedAtUtc)
                 .IsRequired()
                 .HasColumnType("TEXT");
@@ -42,6 +46,11 @@ public class DashboardDbContext : DbContext
             entity.Property(e => e.EntraJoinedDevices)
                 .IsRequired();
 
+            entity.Property(e => e.Source)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("Unknown");
+
             entity.Property(e => e.CollectionSucceeded)
                 .IsRequired();
 
@@ -50,6 +59,10 @@ public class DashboardDbContext : DbContext
 
             entity.Property(e => e.ErrorMessage)
                 .HasMaxLength(500);
+
+            // Every read is scoped to one tenant and ordered by time, so index the pair
+            entity.HasIndex(e => new { e.TenantId, e.CapturedAtUtc })
+                .HasDatabaseName("IX_MetricSnapshot_TenantId_CapturedAtUtc");
 
             // Index on CapturedAtUtc for efficient queries
             entity.HasIndex(e => e.CapturedAtUtc)

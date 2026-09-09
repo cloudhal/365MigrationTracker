@@ -14,6 +14,66 @@
     <HeadOutlet @rendermode="InteractiveServer" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
     <link href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" rel="stylesheet" />
+
+    @*
+        Pre-paint dark mode.
+
+        The server prerenders without access to the browser's localStorage, so the initial
+        HTML always carries MudBlazor's light palette. Left alone, a returning dark-mode user
+        sees that light paint until the circuit connects and MainLayout re-renders - the
+        "flash of light mode".
+
+        This blocking script runs before first paint and, if dark mode was saved, stamps a
+        class on <html> whose rules override the light palette variables MudThemeProvider
+        emitted at :root (element+class beats :root on specificity). MainLayout removes the
+        class once the real theme is live, so in-session toggling is unaffected.
+
+        Values below are MudBlazor 9.9.0's PaletteDark defaults, read from a live dark render.
+        If the theme is ever customised, re-read them or this pre-paint will drift.
+    *@
+    <script>
+        (function () {
+            try {
+                var v = window.localStorage.getItem('darkmode');
+                if (v === 'true' || v === '"true"') {
+                    document.documentElement.classList.add('mud-dark-preload');
+                }
+            } catch (e) {
+                // Storage blocked (private browsing, blocked site data) - keep the light default.
+            }
+        })();
+        window.clearDarkModePreload = function () {
+            document.documentElement.classList.remove('mud-dark-preload');
+        };
+    </script>
+    <style>
+        html.mud-dark-preload {
+            --mud-palette-background: rgba(50,51,61,1);
+            --mud-palette-background-gray: rgba(39,39,47,1);
+            --mud-palette-surface: rgba(55,55,64,1);
+            --mud-palette-appbar-background: rgba(39,39,47,1);
+            --mud-palette-appbar-text: rgba(255,255,255,0.6980392156862745);
+            --mud-palette-drawer-background: rgba(39,39,47,1);
+            --mud-palette-drawer-text: rgba(255,255,255,0.4980392156862745);
+            --mud-palette-drawer-icon: rgba(255,255,255,0.4980392156862745);
+            --mud-palette-text-primary: rgba(255,255,255,0.6980392156862745);
+            --mud-palette-text-secondary: rgba(255,255,255,0.4980392156862745);
+            --mud-palette-text-disabled: rgba(255,255,255,0.2);
+            --mud-palette-divider: rgba(255,255,255,0.11764705882352941);
+            --mud-palette-divider-light: rgba(255,255,255,0.058823529411764705);
+            --mud-palette-lines-default: rgba(255,255,255,0.11764705882352941);
+            --mud-palette-lines-inputs: rgba(255,255,255,0.2980392156862745);
+            --mud-palette-table-lines: rgba(255,255,255,0.11764705882352941);
+            --mud-palette-action-default: rgba(173,173,177,1);
+            --mud-palette-action-disabled: rgba(255,255,255,0.25882352941176473);
+            --mud-palette-action-disabled-background: rgba(255,255,255,0.11764705882352941);
+        }
+
+        /* body background is painted before MudBlazor's own rules apply */
+        html.mud-dark-preload body {
+            background-color: rgba(50,51,61,1);
+        }
+    </style>
 </head>
 
 <body>

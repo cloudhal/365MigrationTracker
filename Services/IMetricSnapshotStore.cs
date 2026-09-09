@@ -4,40 +4,42 @@ namespace _365MigrationTracker.Services;
 
 /// <summary>
 /// Abstraction for storing and retrieving metric snapshots.
-/// This interface allows future implementations using different storage backends (e.g., Azure Table Storage).
+///
+/// Every read takes a tenantId and is filtered by it. That parameter is mandatory
+/// rather than optional on purpose: the app is multi-tenant with one shared table, so
+/// an unfiltered read would show one customer another customer's figures. Making it a
+/// required argument means a caller cannot omit it by accident.
 /// </summary>
 public interface IMetricSnapshotStore
 {
     /// <summary>
-    /// Saves a metric snapshot to storage.
+    /// Saves a snapshot. The snapshot's TenantId must already be set.
     /// </summary>
-    /// <param name="snapshot">The snapshot to save.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The saved snapshot with its Id populated.</returns>
-    Task<MetricSnapshot> SaveSnapshotAsync(MetricSnapshot snapshot, CancellationToken cancellationToken = default);
+    Task<MetricSnapshot> SaveSnapshotAsync(
+        MetricSnapshot snapshot,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves the most recent successful snapshot.
+    /// Most recent successful snapshot for the given tenant, or null if there is none.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The latest successful snapshot, or null if none exist.</returns>
-    Task<MetricSnapshot?> GetLatestSuccessfulSnapshotAsync(CancellationToken cancellationToken = default);
+    Task<MetricSnapshot?> GetLatestSuccessfulSnapshotAsync(
+        string tenantId,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves successful snapshots within a date range.
+    /// Successful snapshots for the given tenant within the date range, oldest first.
     /// </summary>
-    /// <param name="startUtc">Start of date range (inclusive).</param>
-    /// <param name="endUtc">End of date range (inclusive).</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Successful snapshots ordered by CapturedAtUtc ascending.</returns>
-    Task<IEnumerable<MetricSnapshot>> GetSuccessfulSnapshotsAsync(DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
+    Task<IEnumerable<MetricSnapshot>> GetSuccessfulSnapshotsAsync(
+        string tenantId,
+        DateTime startUtc,
+        DateTime endUtc,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves recent failed collection attempts.
+    /// Recent failed collection attempts for the given tenant, newest first.
     /// </summary>
-    /// <param name="limit">Maximum number of failures to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Failed snapshots ordered by CapturedAtUtc descending.</returns>
-    Task<IEnumerable<MetricSnapshot>> GetRecentFailuresAsync(int limit = 10, CancellationToken cancellationToken = default);
+    Task<IEnumerable<MetricSnapshot>> GetRecentFailuresAsync(
+        string tenantId,
+        int limit = 10,
+        CancellationToken cancellationToken = default);
 }
-

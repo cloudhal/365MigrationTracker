@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="365MigrationTracker.csproj" />
+  <Project Path="365MigrationTracker.Tests/365MigrationTracker.Tests.csproj" />
+</Solution>

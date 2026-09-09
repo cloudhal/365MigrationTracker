@@ -1,0 +1,83 @@
+@page "/signin-problem"
+@attribute [AllowAnonymous]
+@inject NavigationManager Navigation
+
+<PageTitle>Sign-in problem - 365 Migration Tracker</PageTitle>
+
+@* AllowAnonymous is essential here: the fallback authorization policy requires a
+   signed-in user for everything, and this page exists precisely for people who are
+   not signed in. Without it, a failed sign-in would redirect to a page that itself
+   redirects to sign-in - a loop. *@
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-16">
+    <MudPaper Elevation="2" Class="pa-8">
+
+        @if (IsConsentDeclined)
+        {
+            <MudText Typo="Typo.h5" Class="mb-4">Permission was not granted</MudText>
+
+            <MudText Typo="Typo.body1" Class="mb-4">
+                Sign-in was cancelled at the consent screen, so the dashboard has no access
+                to your directory and cannot show anything.
+            </MudText>
+
+            <MudText Typo="Typo.body2" Class="mb-2">It asks to read three things:</MudText>
+
+            <MudList T="string" Dense="true" Class="mb-4">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
+                    <MudText Typo="Typo.body2">
+                        <strong>Users</strong> - to count how many still sync from on-premises AD
+                    </MudText>
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Group">
+                    <MudText Typo="Typo.body2">
+                        <strong>Groups</strong> - the same count for groups
+                    </MudText>
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Devices">
+                    <MudText Typo="Typo.body2">
+                        <strong>Devices</strong> - to tell hybrid joined from Entra joined
+                    </MudText>
+                </MudListItem>
+            </MudList>
+
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-6">
+                All three are read-only. The dashboard never writes to your directory, and
+                only ever stores counts - no names, no sign-in data.
+            </MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.h5" Class="mb-4">Sign-in could not be completed</MudText>
+
+            <MudText Typo="Typo.body1" Class="mb-6">
+                Something went wrong between here and Microsoft Entra. Trying again often
+                resolves it. If it keeps happening, your administrator may need to check
+                that this application is permitted in your tenant.
+            </MudText>
+        }
+
+        <MudStack Row="true" Spacing="2">
+            <MudButton Href="MicrosoftIdentity/Account/SignIn"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Login">
+                Try again
+            </MudButton>
+        </MudStack>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool IsConsentDeclined;
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        IsConsentDeclined = query.TryGetValue("reason", out var reason)
+                            && reason == "consent_declined";
+    }
+}

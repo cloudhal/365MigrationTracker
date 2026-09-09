@@ -11,6 +11,15 @@ public class MetricSnapshot
     public int Id { get; set; }
 
     /// <summary>
+    /// Entra tenant this snapshot belongs to, taken from the signed-in user's token.
+    ///
+    /// This is a security boundary, not a label. The app is multi-tenant and every
+    /// customer's rows share one table, so any query that reads snapshots MUST filter on
+    /// this column or one customer will see another's figures.
+    /// </summary>
+    public string TenantId { get; set; } = string.Empty;
+
+    /// <summary>
     /// The UTC timestamp when this snapshot was captured.
     /// </summary>
     public DateTime CapturedAtUtc { get; set; }
@@ -44,6 +53,30 @@ public class MetricSnapshot
     /// Must be non-negative.
     /// </summary>
     public int EntraJoinedDevices { get; set; }
+
+    /// <summary>
+    /// Total number of users in the tenant (synced + Entra-only).
+    /// </summary>
+    public int TotalUsers { get; set; }
+
+    /// <summary>
+    /// Total number of groups in the tenant (synced + Entra-only).
+    /// </summary>
+    public int TotalGroups { get; set; }
+
+    /// <summary>
+    /// Total number of devices in the tenant.
+    /// </summary>
+    public int TotalDevices { get; set; }
+
+    /// <summary>
+    /// Which metrics source produced this row - "Graph" or "Simulated".
+    ///
+    /// Recorded because the two are not comparable: mixing them in one trend produces a
+    /// chart that looks like migration progress but is really the switch between sources.
+    /// Rows written before this column existed carry "Unknown".
+    /// </summary>
+    public string Source { get; set; } = "Unknown";
 
     /// <summary>
     /// True if this snapshot represents a successful collection; false if it failed.

@@ -1,0 +1,296 @@
+@page "/details/{Kind}"
+@using _365MigrationTracker.Models
+@using _365MigrationTracker.Services
+@inject IDirectorySource DirectorySource
+@inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
+@inject ILogger<DirectoryDetails> Logger
+
+<PageTitle>@PageHeading - 365 Migration Tracker</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="py-8">
+
+    <MudButton Href="/"
+               StartIcon="@Icons.Material.Filled.ArrowBack"
+               Variant="Variant.Text"
+               Class="mb-4">
+        Back to dashboard
+    </MudButton>
+
+    <MudText Typo="Typo.h4" Class="mb-1">@PageHeading</MudText>
+    <MudText Typo="Typo.body2" Class="mb-6">
+        Live view of Microsoft Entra ID. These records are read on demand and are not stored by this app.
+    </MudText>
+
+    @if (_loading)
+    {
+        <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="my-8">
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+            <MudText Typo="Typo.body2">Reading from Microsoft Graph...</MudText>
+        </MudStack>
+    }
+    else if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-6">@_error</MudAlert>
+    }
+    else if (!IsKnownKind)
+    {
+        <MudAlert Severity="Severity.Warning">
+            Unknown detail view "@Kind". Expected users, groups or devices.
+        </MudAlert>
+    }
+    else
+    {
+        <!-- Chart: built from the same list as the grid below, so the two always agree -->
+        <MudCard Class="mb-6">
+            <MudCardContent Class="d-flex flex-column align-center">
+                <MudChart T="double"
+                          ChartType="ChartType.Donut"
+                          Width="260px"
+                          Height="260px"
+                          ChartSeries="@ChartSeriesData"
+                          ChartLabels="@ChartLabels"
+                          ChartOptions="@ChartOptionsValue" />
+                <MudText Typo="Typo.caption" Class="mt-3">@TotalCount.ToString("N0") total</MudText>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard>
+            <MudCardContent>
+                @if (Kind.Equals("users", StringComparison.OrdinalIgnoreCase))
+                {
+                    <MudDataGrid T="DirectoryUser"
+                                 Items="@_users"
+                                 Filterable="true"
+                                 SortMode="SortMode.Multiple"
+                                 Dense="true"
+                                 Hover="true"
+                                 Striped="true"
+                                 QuickFilter="@UserQuickFilter">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Users</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_search"
+                                          Placeholder="Search name or UPN"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          Immediate="true"
+                                          Class="mt-0" />
+                        </ToolBarContent>
+                        <Columns>
+                            <PropertyColumn Property="x => x.DisplayName" Title="Name" />
+                            <PropertyColumn Property="x => x.UserPrincipalName" Title="User principal name" />
+                            <PropertyColumn Property="x => x.OnPremisesSyncEnabled" Title="OnPremisesSyncEnabled" />
+                            <PropertyColumn Property="x => x.SourceLabel" Title="Source" />
+                            <PropertyColumn Property="x => x.AccountEnabled" Title="Enabled" />
+                        </Columns>
+                        <PagerContent>
+                            <MudDataGridPager T="DirectoryUser" />
+                        </PagerContent>
+                    </MudDataGrid>
+                }
+                else if (Kind.Equals("groups", StringComparison.OrdinalIgnoreCase))
+                {
+                    <MudDataGrid T="DirectoryGroup"
+                                 Items="@_groups"
+                                 Filterable="true"
+                                 SortMode="SortMode.Multiple"
+                                 Dense="true"
+                                 Hover="true"
+                                 Striped="true"
+                                 QuickFilter="@GroupQuickFilter">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Groups</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_search"
+                                          Placeholder="Search name or mail"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          Immediate="true"
+                                          Class="mt-0" />
+                        </ToolBarContent>
+                        <Columns>
+                            <PropertyColumn Property="x => x.DisplayName" Title="Name" />
+                            <PropertyColumn Property="x => x.Mail" Title="Mail" />
+                            <PropertyColumn Property="x => x.OnPremisesSyncEnabled" Title="OnPremisesSyncEnabled" />
+                            <PropertyColumn Property="x => x.SourceLabel" Title="Source" />
+                            <PropertyColumn Property="x => x.SecurityEnabled" Title="Security" />
+                        </Columns>
+                        <PagerContent>
+                            <MudDataGridPager T="DirectoryGroup" />
+                        </PagerContent>
+                    </MudDataGrid>
+                }
+                else
+                {
+                    <MudDataGrid T="DirectoryDevice"
+                                 Items="@_devices"
+                                 Filterable="true"
+                                 SortMode="SortMode.Multiple"
+                                 Dense="true"
+                                 Hover="true"
+                                 Striped="true"
+                                 QuickFilter="@DeviceQuickFilter">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Windows devices</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_search"
+                                          Placeholder="Search name or OS"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          Immediate="true"
+                                          Class="mt-0" />
+                        </ToolBarContent>
+                        <Columns>
+                            <PropertyColumn Property="x => x.DisplayName" Title="Name" />
+                            <PropertyColumn Property="x => x.JoinTypeLabel" Title="Join type" />
+                            <PropertyColumn Property="x => x.TrustType" Title="trustType" />
+                            <PropertyColumn Property="x => x.OperatingSystem" Title="OS" />
+                            <PropertyColumn Property="x => x.OperatingSystemVersion" Title="OS version" />
+                            <PropertyColumn Property="x => x.RegistrationDateTime" Title="Registered" />
+                            <PropertyColumn Property="x => x.ApproximateLastSignInDateTime" Title="Last sign-in" />
+                        </Columns>
+                        <PagerContent>
+                            <MudDataGridPager T="DirectoryDevice" />
+                        </PagerContent>
+                    </MudDataGrid>
+                }
+            </MudCardContent>
+        </MudCard>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string Kind { get; set; } = "users";
+
+    private IReadOnlyList<DirectoryUser> _users = Array.Empty<DirectoryUser>();
+    private IReadOnlyList<DirectoryGroup> _groups = Array.Empty<DirectoryGroup>();
+    private IReadOnlyList<DirectoryDevice> _devices = Array.Empty<DirectoryDevice>();
+
+    private bool _loading = true;
+    private string? _error;
+    private string _search = string.Empty;
+
+    private bool IsKnownKind =>
+        Kind.Equals("users", StringComparison.OrdinalIgnoreCase)
+        || Kind.Equals("groups", StringComparison.OrdinalIgnoreCase)
+        || Kind.Equals("devices", StringComparison.OrdinalIgnoreCase);
+
+    private string PageHeading => Kind.ToLowerInvariant() switch
+    {
+        "users" => "Users",
+        "groups" => "Groups",
+        "devices" => "Windows devices",
+        _ => "Directory details"
+    };
+
+    // Reloads when the route parameter changes, so navigating between the three
+    // detail views does not serve the previous view's list.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsKnownKind)
+        {
+            _loading = false;
+            return;
+        }
+
+        _loading = true;
+        _error = null;
+        _search = string.Empty;
+
+        try
+        {
+            switch (Kind.ToLowerInvariant())
+            {
+                case "users":
+                    _users = await DirectorySource.GetUsersAsync();
+                    break;
+                case "groups":
+                    _groups = await DirectorySource.GetGroupsAsync();
+                    break;
+                case "devices":
+                    _devices = await DirectorySource.GetDevicesAsync();
+                    break;
+            }
+        }
+        catch (MicrosoftIdentityWebChallengeUserException ex)
+        {
+            // Needs re-authentication or consent - redirect rather than showing an
+            // error the user cannot act on. See the same handling in Dashboard.
+            ConsentHandler.HandleException(ex);
+            return;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load {Kind} detail from Graph", Kind);
+            _error = $"Could not read {Kind} from Microsoft Graph: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Func<DirectoryUser, bool> UserQuickFilter => x =>
+        string.IsNullOrWhiteSpace(_search)
+        || x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || x.UserPrincipalName.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private Func<DirectoryGroup, bool> GroupQuickFilter => x =>
+        string.IsNullOrWhiteSpace(_search)
+        || x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || (x.Mail?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false);
+
+    private Func<DirectoryDevice, bool> DeviceQuickFilter => x =>
+        string.IsNullOrWhiteSpace(_search)
+        || x.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || (x.OperatingSystem?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+        || x.JoinTypeLabel.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private int TotalCount => Kind.ToLowerInvariant() switch
+    {
+        "users" => _users.Count,
+        "groups" => _groups.Count,
+        "devices" => _devices.Count,
+        _ => 0
+    };
+
+    // Same slot order and colours as the dashboard donuts.
+    private readonly ChartOptions ChartOptionsValue = new()
+    {
+        ChartPalette = new[] { "#F5A623", "#2E9E5B", "#9E9E9E" },
+        TooltipTitleFormat = "{{Y_VALUE}}: {{X_VALUE}}"
+    };
+
+    private string[] ChartLabels => Kind.ToLowerInvariant() switch
+    {
+        "devices" => new[] { "Hybrid joined", "Entra joined", "Other" },
+        _ => new[] { "Synced from AD", "Entra only" }
+    };
+
+    private List<ChartSeries<double>> ChartSeriesData => new()
+    {
+        new ChartSeries<double> { Name = PageHeading, Data = ChartData }
+    };
+
+    private double[] ChartData => Kind.ToLowerInvariant() switch
+    {
+        "users" => new double[]
+        {
+            _users.Count(u => u.OnPremisesSyncEnabled),
+            _users.Count(u => !u.OnPremisesSyncEnabled)
+        },
+        "groups" => new double[]
+        {
+            _groups.Count(g => g.OnPremisesSyncEnabled),
+            _groups.Count(g => !g.OnPremisesSyncEnabled)
+        },
+        "devices" => new double[]
+        {
+            _devices.Count(d => d.TrustType == "ServerAd"),
+            _devices.Count(d => d.TrustType == "AzureAd"),
+            _devices.Count(d => d.TrustType != "ServerAd" && d.TrustType != "AzureAd")
+        },
+        _ => Array.Empty<double>()
+    };
+}

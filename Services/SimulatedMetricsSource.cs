@@ -35,6 +35,12 @@ public class SimulatedMetricsSource : IMigrationMetricsSource
     private const int TargetPendingHybridDevices = 0;
     private const int TargetEntraJoinedDevices = 4000;
 
+    // Tenant totals stay flat: objects move from on-premises-synced to cloud-only,
+    // they aren't created or deleted.
+    private const int TotalUsers = BaselineSyncedUsers;
+    private const int TotalGroups = BaselineSyncedGroups;
+    private const int TotalDevices = BaselineHybridDevices + BaselineEntraJoinedDevices;
+
     public SimulatedMetricsSource(ILogger<SimulatedMetricsSource> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -114,7 +120,11 @@ public class SimulatedMetricsSource : IMigrationMetricsSource
             PendingHybridDevices = Math.Max(TargetPendingHybridDevices, (int)(_lastMetrics.PendingHybridDevices * changeMultiplier * variance)),
 
             // Gradually increase Entra-joined devices
-            EntraJoinedDevices = Math.Min(TargetEntraJoinedDevices, (int)(_lastMetrics.EntraJoinedDevices / changeMultiplier / variance))
+            EntraJoinedDevices = Math.Min(TargetEntraJoinedDevices, (int)(_lastMetrics.EntraJoinedDevices / changeMultiplier / variance)),
+
+            TotalUsers = TotalUsers,
+            TotalGroups = TotalGroups,
+            TotalDevices = TotalDevices
         };
 
         // Ensure no negative values
@@ -132,7 +142,10 @@ public class SimulatedMetricsSource : IMigrationMetricsSource
             SyncedGroups = Math.Max(0, metrics.SyncedGroups),
             HybridDevices = Math.Max(0, metrics.HybridDevices),
             PendingHybridDevices = Math.Max(0, metrics.PendingHybridDevices),
-            EntraJoinedDevices = Math.Max(0, metrics.EntraJoinedDevices)
+            EntraJoinedDevices = Math.Max(0, metrics.EntraJoinedDevices),
+            TotalUsers = Math.Max(0, metrics.TotalUsers),
+            TotalGroups = Math.Max(0, metrics.TotalGroups),
+            TotalDevices = Math.Max(0, metrics.TotalDevices)
         };
     }
 }

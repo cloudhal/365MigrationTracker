@@ -29,5 +29,38 @@ public class MigrationMetrics
     /// Number of devices with Microsoft Entra join (trustType == "AzureAd").
     /// </summary>
     public int EntraJoinedDevices { get; set; }
+
+    /// <summary>
+    /// Total number of users in the tenant (synced + Entra-only).
+    /// Used to calculate migration progress.
+    /// </summary>
+    public int TotalUsers { get; set; }
+
+    /// <summary>
+    /// Total number of groups in the tenant (synced + Entra-only).
+    /// Used to calculate migration progress.
+    /// </summary>
+    public int TotalGroups { get; set; }
+
+    /// <summary>
+    /// Total number of devices in the tenant.
+    /// Used to calculate device migration progress.
+    /// </summary>
+    public int TotalDevices { get; set; }
+
+    /// <summary>
+    /// Calculated: Entra-only users (TotalUsers - SyncedUsers).
+    /// </summary>
+    public int EntraOnlyUsers => TotalUsers - SyncedUsers;
+
+    /// <summary>
+    /// Calculated: Entra-only groups (TotalGroups - SyncedGroups).
+    /// </summary>
+    public int EntraOnlyGroups => TotalGroups - SyncedGroups;
+
+    /// <summary>
+    /// Calculated: Entra-only devices (TotalDevices - HybridDevices).
+    /// </summary>
+    public int EntraOnlyDevices => TotalDevices - HybridDevices;
 }
 

@@ -190,8 +190,6 @@ C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\kzb9h
 C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\aqfl7cxvjb-{0}-4d85u1mtcx-4d85u1mtcx.gz
 C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\1q6wm3bc89-{0}-0j3bgjxly4-0j3bgjxly4.gz
 C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\g9uhgamjw6-{0}-abdmv1u4y3-abdmv1u4y3.gz
-C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\davsjtj3uy-{0}-wyu7y4jcvb-wyu7y4jcvb.gz
-C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\uw6ua7f4qc-{0}-wfr2hj6447-wfr2hj6447.gz
 C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\staticwebassets.build.json
 C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\staticwebassets.build.json.cache
 C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\staticwebassets.development.json
@@ -243,3 +241,5 @@ C:\Users\hsclater\repos\365MigrationDashboard\bin\Debug\net10.0\runtimes\win-x64
 C:\Users\hsclater\repos\365MigrationDashboard\bin\Debug\net10.0\runtimes\win-x64\native\AttestationClientLib.pdb
 C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\365MigrationTracker.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\hsclater\repos\365MigrationDashboard\bin\Debug\net10.0\appsettings.Production.json
+C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\davsjtj3uy-{0}-9hsif5t8mt-9hsif5t8mt.gz
+C:\Users\hsclater\repos\365MigrationDashboard\obj\Debug\net10.0\compressed\uw6ua7f4qc-{0}-dwu72t6gfx-dwu72t6gfx.gz

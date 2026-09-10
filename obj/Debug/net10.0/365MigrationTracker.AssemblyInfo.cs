@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("365MigrationTracker")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fff904eb7a02342c09bc6e3cd80add975dc08e49")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8137eb7b186a0b929b22ced6121f895caf7bf567")]
 [assembly: System.Reflection.AssemblyProductAttribute("365MigrationTracker")]
 [assembly: System.Reflection.AssemblyTitleAttribute("365MigrationTracker")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

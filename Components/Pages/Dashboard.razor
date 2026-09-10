@@ -345,11 +345,22 @@
                                   ChartType="ChartType.Timeseries"
                                   ChartSeries="@TrendSeries"
                                   ChartOptions="@TrendChartOptions"
+                                  MatchBoundsToSize="true"
                                   Width="100%"
                                   Height="400px" />
-                        <MudText Typo="Typo.caption">
-                            @GetDateRangeText() &middot; @TrendData.Count data points &middot; lower is better
-                        </MudText>
+
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4" Class="mt-2">
+                            <MudText Typo="Typo.caption">
+                                @GetDateRangeText() &middot; @TrendData.Count data points &middot; lower is better
+                            </MudText>
+                            <MudSpacer />
+                            <MudCheckBox T="bool"
+                                         @bind-Value="_showDataMarkers"
+                                         Label="Show data markers"
+                                         Size="Size.Small"
+                                         Color="Color.Primary"
+                                         Dense="true" />
+                        </MudStack>
                     }
                     else if (TrendData.Count == 1)
                     {
@@ -496,12 +507,18 @@
     // These are the three "still on-premises" counts, matching the tiles below the donuts,
     // so the whole lower half of the dashboard reads as work remaining. All three are the
     // same order of magnitude, so they share one axis honestly.
+    // Off by default: at a dense range the markers crowd the line and obscure the shape.
+    // Useful when the 6-hour cadence makes points sparse, or to see exactly where a
+    // collection landed.
+    private bool _showDataMarkers;
+
     private TimeSeriesChartOptions TrendChartOptions => new()
     {
         TimeLabelFormat = "dd MMM HH:mm",
         TimeLabelSpacing = TrendLabelSpacing,
         TooltipTimeLabelFormat = "dd MMM yyyy HH:mm",
         TooltipTitleFormat = "{{SERIES_NAME}}: {{Y_VALUE}}",
+        ShowDataMarkers = _showDataMarkers,
 
         // Anchor the axis at zero. Without this the axis fits the data range, which for
         // three series sitting between 100 and 174 pins the lowest flat against the

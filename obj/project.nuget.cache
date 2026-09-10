@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "qpE9IcfXXwk=",
+  "dgSpecHash": "Ukr/Zy/8sMU=",
   "success": true,
   "projectFilePath": "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj",
   "expectedPackageFiles": [
@@ -10,7 +10,7 @@
     "C:\\Users\\hsclater\\.nuget\\packages\\azure.security.keyvault.secrets\\4.6.0\\azure.security.keyvault.secrets.4.6.0.nupkg.sha512",
     "C:\\Users\\hsclater\\.nuget\\packages\\blazor.storage\\5.0.0\\blazor.storage.5.0.0.nupkg.sha512",
     "C:\\Users\\hsclater\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
-    "C:\\Users\\hsclater\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.11\\microsoft.aspnetcore.app.internal.assets.10.0.11.nupkg.sha512",
+    "C:\\Users\\hsclater\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.12\\microsoft.aspnetcore.app.internal.assets.10.0.12.nupkg.sha512",
     "C:\\Users\\hsclater\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.0\\microsoft.aspnetcore.authentication.jwtbearer.10.0.0.nupkg.sha512",
     "C:\\Users\\hsclater\\.nuget\\packages\\microsoft.aspnetcore.authentication.openidconnect\\10.0.0\\microsoft.aspnetcore.authentication.openidconnect.10.0.0.nupkg.sha512",
     "C:\\Users\\hsclater\\.nuget\\packages\\microsoft.azure.security.keyguardattestation\\1.1.5\\microsoft.azure.security.keyguardattestation.1.1.5.nupkg.sha512",

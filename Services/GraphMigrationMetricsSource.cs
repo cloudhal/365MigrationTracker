@@ -69,7 +69,9 @@ public class GraphMigrationMetricsSource : IMigrationMetricsSource
 
             // Collect synced metrics
             var syncedUsers = await GetSyncedUsersCountAsync(cancellationToken);
+            var migratedUsers = await GetMigratedUsersCountAsync(cancellationToken);
             var syncedGroups = await GetSyncedGroupsCountAsync(cancellationToken);
+            var cloudOnlyGroups = await GetCloudOnlyGroupsCountAsync(cancellationToken);
             var hybridDevices = await GetHybridDevicesCountAsync(cancellationToken);
             var entraJoined = await GetEntraJoinedDevicesCountAsync(cancellationToken);
 
@@ -80,10 +82,17 @@ public class GraphMigrationMetricsSource : IMigrationMetricsSource
 
             stopwatch.Stop();
 
+            // Calculate migrated groups: those with on-prem origin minus those still synced
+            var onPremOriginGroups = totalGroups - cloudOnlyGroups;
+            var migratedGroups = Math.Max(0, onPremOriginGroups - syncedGroups);
+
             var metrics = new MigrationMetrics
             {
                 SyncedUsers = syncedUsers,
+                MigratedUsers = migratedUsers,
                 SyncedGroups = syncedGroups,
+                MigratedGroups = migratedGroups,
+                CloudOnlyGroups = cloudOnlyGroups,
                 HybridDevices = hybridDevices,
                 EntraJoinedDevices = entraJoined,
                 TotalUsers = totalUsers,
@@ -92,8 +101,8 @@ public class GraphMigrationMetricsSource : IMigrationMetricsSource
             };
 
             _logger.LogInformation(
-                "✓ Users: {Users} | Groups: {Groups} | Hybrid: {Hybrid} | Entra: {Entra} ({Duration}ms)",
-                metrics.SyncedUsers, metrics.SyncedGroups, metrics.HybridDevices,
+                "✓ Users: {SyncedUsers} synced, {MigratedUsers} migrated | Groups: {Groups} | Hybrid: {Hybrid} | Entra: {Entra} ({Duration}ms)",
+                metrics.SyncedUsers, metrics.MigratedUsers, metrics.SyncedGroups, metrics.HybridDevices,
                 metrics.EntraJoinedDevices, stopwatch.ElapsedMilliseconds);
 
             return new CollectionResult
@@ -182,6 +191,47 @@ public class GraphMigrationMetricsSource : IMigrationMetricsSource
     }
 
     /// <summary>
+    /// Gets count of users who have been migrated from on-premises AD.
+    /// Filter: onPremisesSyncEnabled eq false
+    /// These users have been desynced after migration and retain OnPremisesImmutableId.
+    /// </summary>
+    private async Task<int> GetMigratedUsersCountAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await ExecuteGraphQueryWithRetryAsync(
+                async () =>
+                {
+                    var httpClient = new HttpClient();
+                    var token = await GetGraphTokenAsync();
+                    var filter = Uri.EscapeDataString("onPremisesSyncEnabled eq false");
+                    var url = $"https://graph.microsoft.com/v1.0/users?$filter={filter}&$top=1&$count=true";
+
+                    var request = new HttpRequestMessage(HttpMethod.Get, url);
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    request.Headers.Add("ConsistencyLevel", "eventual");
+
+                    var response = await httpClient.SendAsync(request, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var json = System.Text.Json.JsonDocument.Parse(content);
+                    var count = json.RootElement.GetProperty("@odata.count").GetInt32();
+                    return count;
+                },
+                "MigratedUsers",
+                cancellationToken);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting migrated users count");
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Gets count of groups synchronized from on-premises AD.
     /// Filter: onPremisesSyncEnabled eq true
     /// </summary>
@@ -224,6 +274,47 @@ public class GraphMigrationMetricsSource : IMigrationMetricsSource
             // written as a SUCCESSFUL snapshot, so the trend would show a cliff to zero
             // that never happened. Failing the whole collection records it as a failure,
             // which the dashboard excludes from trends and surfaces in Recent Failures.
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Gets count of groups that were never synced from on-premises AD (cloud-only).
+    /// Filter: onPremisesSecurityIdentifier eq null
+    /// </summary>
+    private async Task<int> GetCloudOnlyGroupsCountAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await ExecuteGraphQueryWithRetryAsync(
+                async () =>
+                {
+                    var httpClient = new HttpClient();
+                    var token = await GetGraphTokenAsync();
+                    var filter = Uri.EscapeDataString("onPremisesSecurityIdentifier eq null");
+                    var url = $"https://graph.microsoft.com/v1.0/groups?$filter={filter}&$top=1&$count=true";
+
+                    var request = new HttpRequestMessage(HttpMethod.Get, url);
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    request.Headers.Add("ConsistencyLevel", "eventual");
+
+                    var response = await httpClient.SendAsync(request, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var json = System.Text.Json.JsonDocument.Parse(content);
+                    var count = json.RootElement.GetProperty("@odata.count").GetInt32();
+
+                    return count;
+                },
+                "CloudOnlyGroups",
+                cancellationToken);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting cloud-only groups count");
             throw;
         }
     }

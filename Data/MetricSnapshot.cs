@@ -31,10 +31,31 @@ public class MetricSnapshot
     public int SyncedUsers { get; set; }
 
     /// <summary>
+    /// Number of users who have been migrated from on-premises AD.
+    /// These users have OnPremisesUserPrincipalName set but are no longer synced (onPremisesSyncEnabled is null/false).
+    /// Must be non-negative.
+    /// </summary>
+    public int MigratedUsers { get; set; }
+
+    /// <summary>
     /// Number of groups still synchronized from on-premises AD.
     /// Must be non-negative.
     /// </summary>
     public int SyncedGroups { get; set; }
+
+    /// <summary>
+    /// Number of groups that have been migrated from on-premises AD.
+    /// These groups have OnPremisesSecurityIdentifier set but are no longer synced.
+    /// Must be non-negative.
+    /// </summary>
+    public int MigratedGroups { get; set; }
+
+    /// <summary>
+    /// Number of groups that were never from on-premises AD (cloud-only).
+    /// Filter: onPremisesSecurityIdentifier eq null
+    /// Must be non-negative.
+    /// </summary>
+    public int CloudOnlyGroups { get; set; }
 
     /// <summary>
     /// Number of computers with Microsoft Entra hybrid join.

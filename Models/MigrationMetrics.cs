@@ -16,6 +16,18 @@ public class MigrationMetrics
     public int SyncedGroups { get; set; }
 
     /// <summary>
+    /// Number of groups that have been migrated from on-premises AD.
+    /// These groups have OnPremisesSecurityIdentifier set but are no longer synced.
+    /// </summary>
+    public int MigratedGroups { get; set; }
+
+    /// <summary>
+    /// Number of groups that were never from on-premises AD (cloud-only).
+    /// Filter: onPremisesSecurityIdentifier eq null
+    /// </summary>
+    public int CloudOnlyGroups { get; set; }
+
+    /// <summary>
     /// Number of computers with Microsoft Entra hybrid join (trustType == "ServerAd" and registered).
     /// </summary>
     public int HybridDevices { get; set; }
@@ -47,6 +59,12 @@ public class MigrationMetrics
     /// Used to calculate device migration progress.
     /// </summary>
     public int TotalDevices { get; set; }
+
+    /// <summary>
+    /// Number of users who have been migrated from on-premises AD.
+    /// These users have OnPremisesUserPrincipalName set but are no longer synced (onPremisesSyncEnabled is null/false).
+    /// </summary>
+    public int MigratedUsers { get; set; }
 
     /// <summary>
     /// Calculated: Entra-only users (TotalUsers - SyncedUsers).

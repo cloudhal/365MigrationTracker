@@ -123,7 +123,7 @@
                 <MudCard Class="pa-2 detail-card">
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Users</MudText>
+                            <MudText Typo="Typo.h6">Users - overall</MudText>
                             <MudText Typo="Typo.caption">@CurrentSnapshot.TotalUsers.ToString("N0") total</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
@@ -161,7 +161,7 @@
                 <MudCard Class="pa-2 detail-card">
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Groups</MudText>
+                            <MudText Typo="Typo.h6">Groups - overall</MudText>
                             <MudText Typo="Typo.caption">@CurrentSnapshot.TotalGroups.ToString("N0") total</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
@@ -193,7 +193,87 @@
                     </MudCardContent>
                 </MudCard>
             </MudItem>
+            <!-- Empty tile -->
+            <MudItem xs="12" md="4">
+            </MudItem>
 
+              <!-- User Migration Progress Donut -->
+            <MudItem xs="12" md="4">
+                <MudCard Class="pa-2 detail-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Users - On-Prem Origin</MudText>
+                            <MudText Typo="Typo.caption">@OnPremOriginUsersTotal.ToString("N0") total</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                           Href="/details/users"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           Class="detail-link"
+                                           title="View all users" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Class="d-flex flex-column align-center">
+                        @if (OnPremOriginUsersTotal > 0)
+                        {
+                            <MudChart T="double"
+                                      ChartType="ChartType.Donut"
+                                      Width="220px"
+                                      Height="220px"
+                                      ChartSeries="@MigrationProgressSeries"
+                                      ChartLabels="@MigrationProgressLabels"
+                                      ChartOptions="@SplitChartOptions" />
+                            <MudText Typo="Typo.h5" Class="mt-3">@FormatPercent(CurrentSnapshot.MigratedUsers, OnPremOriginUsersTotal)</MudText>
+                            <MudText Typo="Typo.caption">migrated</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">No data</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+                <!-- Groups Migration Progress Donut -->
+            <MudItem xs="12" md="4">
+                <MudCard Class="pa-2 detail-card">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Groups - On-Prem Origin</MudText>
+                            <MudText Typo="Typo.caption">@OnPremOriginGroupsTotal.ToString("N0") total</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                           Href="/details/groups"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           Class="detail-link"
+                                           title="View all groups" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Class="d-flex flex-column align-center">
+                        @if (OnPremOriginGroupsTotal > 0)
+                        {
+                            <MudChart T="double"
+                                      ChartType="ChartType.Donut"
+                                      Width="220px"
+                                      Height="220px"
+                                      ChartSeries="@GroupsMigrationProgressSeries"
+                                      ChartLabels="@GroupsMigrationProgressLabels"
+                                      ChartOptions="@SplitChartOptions" />
+                            <MudText Typo="Typo.h5" Class="mt-3">@FormatPercent(CurrentSnapshot.MigratedGroups, OnPremOriginGroupsTotal)</MudText>
+                            <MudText Typo="Typo.caption">migrated</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">No data</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            
             <!-- Devices Donut -->
             <MudItem xs="12" md="4">
                 <MudCard Class="pa-2 detail-card">
@@ -232,80 +312,12 @@
                 </MudCard>
             </MudItem>
         </MudGrid>
+
     }
 
-    <!-- Metric Cards -->
+
     @if (CurrentSnapshot != null)
     {
-        <MudGrid Class="mb-6">
-            <!-- Synced Users -->
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudStack Spacing="2">
-                            <MudText Typo="Typo.subtitle2">Users still synced from on-premises AD</MudText>
-                            <MudText Typo="Typo.h4">@CurrentSnapshot.SyncedUsers.ToString("N0")</MudText>
-                            @{
-                                var userProgress = ProgressService.CalculateSyncedUsersProgress(CurrentSnapshot, PreviousSnapshot);
-                            }
-                            <MudText Typo="Typo.body2" Color="@(userProgress.IsProgressingWell ? Color.Success : Color.Warning)">
-                                @userProgress.AbsoluteChangeLabel
-                            </MudText>
-                            @if (userProgress.PercentageMigrated.HasValue)
-                            {
-                                    <MudText Typo="Typo.caption">@userProgress.PercentageMigratedLabel migrated</MudText>
-                            }
-                        </MudStack>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-
-            <!-- Synced Groups -->
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudStack Spacing="2">
-                            <MudText Typo="Typo.subtitle2">Groups still synced from on-premises AD</MudText>
-                            <MudText Typo="Typo.h4">@CurrentSnapshot.SyncedGroups.ToString("N0")</MudText>
-                            @{
-                                var groupProgress = ProgressService.CalculateSyncedGroupsProgress(CurrentSnapshot, PreviousSnapshot);
-                            }
-                            <MudText Typo="Typo.body2" Color="@(groupProgress.IsProgressingWell ? Color.Success : Color.Warning)">
-                                @groupProgress.AbsoluteChangeLabel
-                            </MudText>
-                            @if (groupProgress.PercentageMigrated.HasValue)
-                            {
-                                    <MudText Typo="Typo.caption">@groupProgress.PercentageMigratedLabel migrated</MudText>
-                            }
-                        </MudStack>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-
-            <!-- Hybrid Devices -->
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudStack Spacing="2">
-                            <MudText Typo="Typo.subtitle2">Microsoft Entra hybrid joined devices</MudText>
-                            <MudText Typo="Typo.h4">@CurrentSnapshot.HybridDevices.ToString("N0")</MudText>
-                            @{
-                                var hybridProgress = ProgressService.CalculateHybridDevicesProgress(CurrentSnapshot, PreviousSnapshot);
-                            }
-                            <MudText Typo="Typo.body2" Color="@(hybridProgress.IsProgressingWell ? Color.Success : Color.Warning)">
-                                @hybridProgress.AbsoluteChangeLabel
-                            </MudText>
-                            @if (hybridProgress.PercentageMigrated.HasValue)
-                            {
-                                    <MudText Typo="Typo.caption">@hybridProgress.PercentageMigratedLabel migrated</MudText>
-                            }
-                        </MudStack>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-
-        </MudGrid>
-
         <!-- Trends Section -->
         <MudCard>
             <MudCardHeader>
@@ -378,6 +390,59 @@
                 </MudStack>
             </MudCardContent>
         </MudCard>
+
+    <!-- Metric Cards -->
+    <MudGrid Class="mt-0 mb-6">
+            <!-- Users Migration -->
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Users migrated from on-premises AD</MudText>
+                            <MudText Typo="Typo.h4">@FormatPercent(CurrentSnapshot.MigratedUsers, OnPremOriginUsersTotal)</MudText>
+                            <MudText Typo="Typo.body2">@CurrentSnapshot.MigratedUsers.ToString("N0") of @OnPremOriginUsersTotal.ToString("N0")</MudText>
+                            <MudText Typo="Typo.caption">migrated</MudText>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Groups Migration -->
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Groups migrated from on-premises AD</MudText>
+                            <MudText Typo="Typo.h4">@FormatPercent(CurrentSnapshot.MigratedGroups, OnPremOriginGroupsTotal)</MudText>
+                            <MudText Typo="Typo.body2">@CurrentSnapshot.MigratedGroups.ToString("N0") of @OnPremOriginGroupsTotal.ToString("N0")</MudText>
+                            <MudText Typo="Typo.caption">migrated</MudText>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Hybrid Devices -->
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">Microsoft Entra hybrid joined devices</MudText>
+                            <MudText Typo="Typo.h4">@CurrentSnapshot.HybridDevices.ToString("N0")</MudText>
+                            @{
+                                var hybridProgress = ProgressService.CalculateHybridDevicesProgress(CurrentSnapshot, PreviousSnapshot);
+                            }
+                            <MudText Typo="Typo.body2" Color="@(hybridProgress.IsProgressingWell ? Color.Success : Color.Warning)">
+                                @hybridProgress.AbsoluteChangeLabel
+                            </MudText>
+                            @if (hybridProgress.PercentageMigrated.HasValue)
+                            {
+                                    <MudText Typo="Typo.caption">@hybridProgress.PercentageMigratedLabel migrated</MudText>
+                            }
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
 
         <!-- Recent Failures -->
         @if (RecentFailures.Count > 0)
@@ -460,6 +525,16 @@
         ? 0
         : Math.Max(0, CurrentSnapshot.TotalGroups - CurrentSnapshot.SyncedGroups);
 
+    // Users with on-premises origin (synced + migrated)
+    private int OnPremOriginUsersTotal => CurrentSnapshot == null
+        ? 0
+        : CurrentSnapshot.SyncedUsers + CurrentSnapshot.MigratedUsers;
+
+    // Groups with on-premises origin (synced + migrated)
+    private int OnPremOriginGroupsTotal => CurrentSnapshot == null
+        ? 0
+        : CurrentSnapshot.SyncedGroups + CurrentSnapshot.MigratedGroups;
+
     // Devices that are neither hybrid joined nor Entra joined (e.g. workplace registered)
     private int OtherDevices => CurrentSnapshot == null
         ? 0
@@ -471,11 +546,23 @@
 
     private string[] UsersChartLabels => new[] { "Synced from AD", "Entra only" };
 
+    private double[] MigrationProgressChartData => CurrentSnapshot == null
+        ? Array.Empty<double>()
+        : new double[] { CurrentSnapshot.SyncedUsers, CurrentSnapshot.MigratedUsers };
+
+    private string[] MigrationProgressLabels => new[] { "Still synced from AD", "Migrated" };
+
     private double[] GroupsChartData => CurrentSnapshot == null
         ? Array.Empty<double>()
         : new double[] { CurrentSnapshot.SyncedGroups, EntraOnlyGroups };
 
     private string[] GroupsChartLabels => new[] { "Synced from AD", "Entra only" };
+
+    private double[] GroupsMigrationProgressChartData => CurrentSnapshot == null
+        ? Array.Empty<double>()
+        : new double[] { CurrentSnapshot.SyncedGroups, CurrentSnapshot.MigratedGroups };
+
+    private string[] GroupsMigrationProgressLabels => new[] { "Still synced from AD", "Migrated" };
 
     private double[] DevicesChartData
     {
@@ -576,9 +663,19 @@
         new ChartSeries<double> { Name = "Users", Data = UsersChartData }
     };
 
+    private List<ChartSeries<double>> MigrationProgressSeries => new()
+    {
+        new ChartSeries<double> { Name = "Migration Progress", Data = MigrationProgressChartData }
+    };
+
     private List<ChartSeries<double>> GroupsSeries => new()
     {
         new ChartSeries<double> { Name = "Groups", Data = GroupsChartData }
+    };
+
+    private List<ChartSeries<double>> GroupsMigrationProgressSeries => new()
+    {
+        new ChartSeries<double> { Name = "Groups Migration Progress", Data = GroupsMigrationProgressChartData }
     };
 
     private List<ChartSeries<double>> DevicesSeries => new()

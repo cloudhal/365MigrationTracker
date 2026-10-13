@@ -74,13 +74,14 @@ public class GraphDirectorySource : IDirectorySource
 
         var url = $"https://graph.microsoft.com/v1.0/devices" +
                   $"?$filter={filter}" +
-                  $"&$select=displayName,operatingSystem,operatingSystemVersion,trustType," +
+                  $"&$select=displayName,deviceId,operatingSystem,operatingSystemVersion,trustType," +
                   $"registrationDateTime,approximateLastSignInDateTime" +
                   $"&$top={PageSize}";
 
         return await FetchAllPagesAsync(url, "devices", item => new DirectoryDevice
         {
             DisplayName = GetString(item, "displayName"),
+            DeviceId = GetNullableString(item, "deviceId"),
             OperatingSystem = GetNullableString(item, "operatingSystem"),
             OperatingSystemVersion = GetNullableString(item, "operatingSystemVersion"),
             TrustType = GetNullableString(item, "trustType"),

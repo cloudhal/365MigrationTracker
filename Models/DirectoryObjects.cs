@@ -54,6 +54,7 @@ public class DirectoryGroup
 public class DirectoryDevice
 {
     public string DisplayName { get; set; } = string.Empty;
+    public string? DeviceId { get; set; }
     public string? OperatingSystem { get; set; }
     public string? OperatingSystemVersion { get; set; }
 

@@ -387,7 +387,7 @@ dotnet publish -c Release -o ./publish
 
 | Item | Value |
 |---|---|
-| Resource group | `<resource-group>` |
+| Resource group | `rg-appservice-prod-01` |
 | App Service plan | `appserviceplan-prod-01` (Linux, B1) |
 | Web app | `365migrationdashboard-prod-01` |
 | Runtime stack | `DOTNETCORE|10.0` |
@@ -404,7 +404,7 @@ dotnet publish -c Release -o ./publish
 **Manual deploy (PowerShell)**
 
 ```powershell
-$resourceGroupName = "<resource-group>"
+$resourceGroupName = "rg-appservice-prod-01"
 $webAppName        = "365migrationdashboard-prod-01"
 
 dotnet publish 365MigrationTracker.csproj -c Release -o "$env:TEMP\publish"

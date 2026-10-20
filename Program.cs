@@ -3,6 +3,7 @@ using _365MigrationTracker.Configuration;
 using _365MigrationTracker.Data;
 using _365MigrationTracker.Services;
 using MudBlazor.Services;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Blazored.LocalStorage;
@@ -119,6 +120,12 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "365MigrationTracker");
     Directory.CreateDirectory(dataDir);
     connectionString = $"Data Source={Path.Combine(dataDir, "tracker.db")}";
+}
+
+var sqliteDirectory = Path.GetDirectoryName(Path.GetFullPath(new SqliteConnectionStringBuilder(connectionString).DataSource));
+if (!string.IsNullOrEmpty(sqliteDirectory))
+{
+    Directory.CreateDirectory(sqliteDirectory);
 }
 
 builder.Services.AddDbContext<DashboardDbContext>(options =>

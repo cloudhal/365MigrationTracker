@@ -8,50 +8,46 @@
     ".NETCoreApp,Version=v10.0": {
       "365MigrationTracker/1.0.0": {
         "dependencies": {
-          "Azure.Identity": "1.21.0",
           "Blazor.Storage": "5.0.0",
           "Microsoft.EntityFrameworkCore.Design": "10.0.11",
           "Microsoft.EntityFrameworkCore.Sqlite": "10.0.11",
-          "Microsoft.Graph": "6.5.0",
           "Microsoft.Identity.Web": "4.14.2",
           "Microsoft.Identity.Web.UI": "4.14.2",
-          "Moq": "4.20.72",
-          "MudBlazor": "9.9.0",
-          "xunit": "2.9.3"
+          "MudBlazor": "9.9.0"
         },
         "runtime": {
           "365MigrationTracker.dll": {}
         }
       },
-      "Azure.Core/1.53.0": {
+      "Azure.Core/1.50.0": {
         "dependencies": {
-          "Microsoft.Bcl.AsyncInterfaces": "10.0.3",
-          "Microsoft.Identity.Client": "4.87.0",
-          "Microsoft.Identity.Client.Extensions.Msal": "4.83.1",
-          "System.ClientModel": "1.10.0",
-          "System.Memory.Data": "10.0.3"
+          "Microsoft.Bcl.AsyncInterfaces": "8.0.0",
+          "System.ClientModel": "1.8.0",
+          "System.Memory.Data": "8.0.1"
         },
         "runtime": {
-          "lib/net10.0/Azure.Core.dll": {
-            "assemblyVersion": "1.53.0.0",
-            "fileVersion": "1.5300.26.21006"
+          "lib/net8.0/Azure.Core.dll": {
+            "assemblyVersion": "1.50.0.0",
+            "fileVersion": "1.5000.25.55604"
           }
         }
       },
-      "Azure.Identity/1.21.0": {
+      "Azure.Identity/1.17.2": {
         "dependencies": {
-          "Azure.Core": "1.53.0"
+          "Azure.Core": "1.50.0",
+          "Microsoft.Identity.Client": "4.87.0",
+          "Microsoft.Identity.Client.Extensions.Msal": "4.83.1"
         },
         "runtime": {
-          "lib/net10.0/Azure.Identity.dll": {
-            "assemblyVersion": "1.21.0.0",
-            "fileVersion": "1.2100.26.21009"
+          "lib/net8.0/Azure.Identity.dll": {
+            "assemblyVersion": "1.17.2.0",
+            "fileVersion": "1.1700.226.21520"
           }
         }
       },
       "Azure.Security.KeyVault.Certificates/4.6.0": {
         "dependencies": {
-          "Azure.Core": "1.53.0"
+          "Azure.Core": "1.50.0"
         },
         "runtime": {
           "lib/netstandard2.0/Azure.Security.KeyVault.Certificates.dll": {
@@ -62,7 +58,7 @@
       },
       "Azure.Security.KeyVault.Secrets/4.6.0": {
         "dependencies": {
-          "Azure.Core": "1.53.0"
+          "Azure.Core": "1.50.0"
         },
         "runtime": {
           "lib/netstandard2.0/Azure.Security.KeyVault.Secrets.dll": {
@@ -76,14 +72,6 @@
           "lib/net10.0/Blazor.Storage.dll": {
             "assemblyVersion": "5.0.0.0",
             "fileVersion": "5.0.0.0"
-          }
-        }
-      },
-      "Castle.Core/5.1.1": {
-        "runtime": {
-          "lib/net6.0/Castle.Core.dll": {
-            "assemblyVersion": "5.0.0.0",
-            "fileVersion": "5.1.1.0"
           }
         }
       },
@@ -136,11 +124,11 @@
           }
         }
       },
-      "Microsoft.Bcl.AsyncInterfaces/10.0.3": {
+      "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
         "runtime": {
           "lib/netstandard2.1/Microsoft.Bcl.AsyncInterfaces.dll": {
-            "assemblyVersion": "10.0.0.3",
-            "fileVersion": "10.0.326.7603"
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.23.53103"
           }
         }
       },
@@ -522,36 +510,6 @@
           }
         }
       },
-      "Microsoft.Graph/6.5.0": {
-        "dependencies": {
-          "Microsoft.Graph.Core": "4.0.1"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Graph.dll": {
-            "assemblyVersion": "6.5.0.0",
-            "fileVersion": "6.5.0.0"
-          }
-        }
-      },
-      "Microsoft.Graph.Core/4.0.1": {
-        "dependencies": {
-          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "8.22.0",
-          "Microsoft.IdentityModel.Validators": "8.22.0",
-          "Microsoft.Kiota.Abstractions": "2.0.0",
-          "Microsoft.Kiota.Authentication.Azure": "2.0.0",
-          "Microsoft.Kiota.Http.HttpClientLibrary": "2.0.0",
-          "Microsoft.Kiota.Serialization.Form": "2.0.0",
-          "Microsoft.Kiota.Serialization.Json": "2.0.0",
-          "Microsoft.Kiota.Serialization.Multipart": "2.0.0",
-          "Microsoft.Kiota.Serialization.Text": "2.0.0"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Graph.Core.dll": {
-            "assemblyVersion": "4.0.1.0",
-            "fileVersion": "4.0.1.0"
-          }
-        }
-      },
       "Microsoft.Identity.Abstractions/12.6.0": {
         "runtime": {
           "lib/net10.0/Microsoft.Identity.Abstractions.dll": {
@@ -614,7 +572,7 @@
       },
       "Microsoft.Identity.Web.Certificate/4.14.2": {
         "dependencies": {
-          "Azure.Identity": "1.21.0",
+          "Azure.Identity": "1.17.2",
           "Azure.Security.KeyVault.Certificates": "4.6.0",
           "Azure.Security.KeyVault.Secrets": "4.6.0",
           "Microsoft.Identity.Abstractions": "12.6.0",
@@ -783,96 +741,6 @@
           }
         }
       },
-      "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
-        "runtime": {
-          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
-            "assemblyVersion": "3.0.1.0",
-            "fileVersion": "3.0.1.0"
-          }
-        }
-      },
-      "Microsoft.Kiota.Abstractions/2.0.0": {
-        "dependencies": {
-          "Std.UriTemplate": "2.0.8"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Kiota.Abstractions.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
-      "Microsoft.Kiota.Authentication.Azure/2.0.0": {
-        "dependencies": {
-          "Azure.Core": "1.53.0",
-          "Microsoft.Kiota.Abstractions": "2.0.0"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Kiota.Authentication.Azure.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
-      "Microsoft.Kiota.Http.HttpClientLibrary/2.0.0": {
-        "dependencies": {
-          "Microsoft.Kiota.Abstractions": "2.0.0"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Kiota.Http.HttpClientLibrary.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
-      "Microsoft.Kiota.Serialization.Form/2.0.0": {
-        "dependencies": {
-          "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
-          "Microsoft.Kiota.Abstractions": "2.0.0"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Kiota.Serialization.Form.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
-      "Microsoft.Kiota.Serialization.Json/2.0.0": {
-        "dependencies": {
-          "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
-          "Microsoft.Kiota.Abstractions": "2.0.0"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Kiota.Serialization.Json.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
-      "Microsoft.Kiota.Serialization.Multipart/2.0.0": {
-        "dependencies": {
-          "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
-          "Microsoft.Kiota.Abstractions": "2.0.0"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Kiota.Serialization.Multipart.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
-      "Microsoft.Kiota.Serialization.Text/2.0.0": {
-        "dependencies": {
-          "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
-          "Microsoft.Kiota.Abstractions": "2.0.0"
-        },
-        "runtime": {
-          "lib/net10.0/Microsoft.Kiota.Serialization.Text.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
       "Microsoft.VisualStudio.SolutionPersistence/1.0.52": {
         "runtime": {
           "lib/net8.0/Microsoft.VisualStudio.SolutionPersistence.dll": {
@@ -889,17 +757,6 @@
           "lib/net6.0/Mono.TextTemplating.dll": {
             "assemblyVersion": "3.0.0.0",
             "fileVersion": "3.0.0.1"
-          }
-        }
-      },
-      "Moq/4.20.72": {
-        "dependencies": {
-          "Castle.Core": "5.1.1"
-        },
-        "runtime": {
-          "lib/net6.0/Moq.dll": {
-            "assemblyVersion": "4.20.72.0",
-            "fileVersion": "4.20.72.0"
           }
         }
       },
@@ -1064,22 +921,14 @@
           }
         }
       },
-      "Std.UriTemplate/2.0.8": {
-        "runtime": {
-          "lib/net5.0/Std.UriTemplate.dll": {
-            "assemblyVersion": "2.0.8.0",
-            "fileVersion": "2.0.8.0"
-          }
-        }
-      },
-      "System.ClientModel/1.10.0": {
+      "System.ClientModel/1.8.0": {
         "dependencies": {
-          "System.Memory.Data": "10.0.3"
+          "System.Memory.Data": "8.0.1"
         },
         "runtime": {
-          "lib/net10.0/System.ClientModel.dll": {
-            "assemblyVersion": "1.10.0.0",
-            "fileVersion": "1.1000.26.16607"
+          "lib/net9.0/System.ClientModel.dll": {
+            "assemblyVersion": "1.8.0.0",
+            "fileVersion": "1.800.25.55302"
           }
         }
       },
@@ -1163,11 +1012,11 @@
           }
         }
       },
-      "System.Memory.Data/10.0.3": {
+      "System.Memory.Data/8.0.1": {
         "runtime": {
-          "lib/net10.0/System.Memory.Data.dll": {
-            "assemblyVersion": "10.0.0.3",
-            "fileVersion": "10.0.326.7603"
+          "lib/net8.0/System.Memory.Data.dll": {
+            "assemblyVersion": "8.0.0.1",
+            "fileVersion": "8.0.1024.46610"
           }
         }
       },
@@ -1186,56 +1035,6 @@
             "fileVersion": "4.6.26515.6"
           }
         }
-      },
-      "xunit/2.9.3": {
-        "dependencies": {
-          "xunit.assert": "2.9.3",
-          "xunit.core": "2.9.3"
-        }
-      },
-      "xunit.abstractions/2.0.3": {
-        "runtime": {
-          "lib/netstandard2.0/xunit.abstractions.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
-      "xunit.assert/2.9.3": {
-        "runtime": {
-          "lib/net6.0/xunit.assert.dll": {
-            "assemblyVersion": "2.9.3.0",
-            "fileVersion": "2.9.3.0"
-          }
-        }
-      },
-      "xunit.core/2.9.3": {
-        "dependencies": {
-          "xunit.extensibility.core": "2.9.3",
-          "xunit.extensibility.execution": "2.9.3"
-        }
-      },
-      "xunit.extensibility.core/2.9.3": {
-        "dependencies": {
-          "xunit.abstractions": "2.0.3"
-        },
-        "runtime": {
-          "lib/netstandard1.1/xunit.core.dll": {
-            "assemblyVersion": "2.9.3.0",
-            "fileVersion": "2.9.3.0"
-          }
-        }
-      },
-      "xunit.extensibility.execution/2.9.3": {
-        "dependencies": {
-          "xunit.extensibility.core": "2.9.3"
-        },
-        "runtime": {
-          "lib/netstandard1.1/xunit.execution.dotnet.dll": {
-            "assemblyVersion": "2.9.3.0",
-            "fileVersion": "2.9.3.0"
-          }
-        }
       }
     }
   },
@@ -1245,19 +1044,19 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Azure.Core/1.53.0": {
+    "Azure.Core/1.50.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-x9c/toFMOtRrlTdFuE7rlGCVAduQzWVfKmLz5juj41zJAXEhYD5hluiUyyAEzJ6OxpBnKtiaBztzwpZITAVjtg==",
-      "path": "azure.core/1.53.0",
-      "hashPath": "azure.core.1.53.0.nupkg.sha512"
+      "sha512": "sha512-GBNKZEhdIbTXxedvD3R7I/yDVFX9jJJEz02kCziFSJxspSQ5RMHc3GktulJ1s7+ffXaXD7kMgrtdQTaggyInLw==",
+      "path": "azure.core/1.50.0",
+      "hashPath": "azure.core.1.50.0.nupkg.sha512"
     },
-    "Azure.Identity/1.21.0": {
+    "Azure.Identity/1.17.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-GeFv8sGwRKvDKwI2WFy8r0mhmlxEVZg24Sit2NogTjiSO8RVjllWM65OT6e1sKjOvG8V74y7hAbaELUUPjZQSw==",
-      "path": "azure.identity/1.21.0",
-      "hashPath": "azure.identity.1.21.0.nupkg.sha512"
+      "sha512": "sha512-WLI9tc1NwOzvncfSfut5w/qv4f4ZC+l4JK0XXNZCMjZn6MDAgytZsNAJBI3MJs+XcPGBikedYv/dLMXryLQBeg==",
+      "path": "azure.identity/1.17.2",
+      "hashPath": "azure.identity.1.17.2.nupkg.sha512"
     },
     "Azure.Security.KeyVault.Certificates/4.6.0": {
       "type": "package",
@@ -1279,13 +1078,6 @@
       "sha512": "sha512-IjOU4sRnowb6tNr2Vosk7x5QXoGU7Cdf26TnHiQ56WnSznVumtHvhWvtsKbk+sfUF3DrKpYXf/YkR867IlkoWg==",
       "path": "blazor.storage/5.0.0",
       "hashPath": "blazor.storage.5.0.0.nupkg.sha512"
-    },
-    "Castle.Core/5.1.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-rpYtIczkzGpf+EkZgDr9CClTdemhsrwA/W5hMoPjLkRFnXzH44zDLoovXeKtmxb1ykXK9aJVODSpiJml8CTw2g==",
-      "path": "castle.core/5.1.1",
-      "hashPath": "castle.core.5.1.1.nupkg.sha512"
     },
     "Humanizer.Core/2.14.1": {
       "type": "package",
@@ -1315,12 +1107,12 @@
       "path": "microsoft.azure.security.keyguardattestation/1.1.5",
       "hashPath": "microsoft.azure.security.keyguardattestation.1.1.5.nupkg.sha512"
     },
-    "Microsoft.Bcl.AsyncInterfaces/10.0.3": {
+    "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-TV62UsrJZPX6gbt3c4WrtXh7bmaDIcMqf9uft1cc4L6gJXOU07hDGEh+bFQh/L2Az0R1WVOkiT66lFqS6G2NmA==",
-      "path": "microsoft.bcl.asyncinterfaces/10.0.3",
-      "hashPath": "microsoft.bcl.asyncinterfaces.10.0.3.nupkg.sha512"
+      "sha512": "sha512-3WA9q9yVqJp222P3x1wYIGDAkpjAku0TMUaaQV22g6L67AI0LdOIrVS7Ht2vJfLHGSPVuqN94vIr15qn+HEkHw==",
+      "path": "microsoft.bcl.asyncinterfaces/8.0.0",
+      "hashPath": "microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512"
     },
     "Microsoft.Bcl.Cryptography/10.0.2": {
       "type": "package",
@@ -1426,20 +1218,6 @@
       "sha512": "sha512-PJPtFYsZ+r+uz9qqXWUTEyKeJ1EiBGIJtqavkg9ZXijjGSFAk4Fgi5sqIxj+uAyLZwEKgexDUQXhWhvU6l3+og==",
       "path": "microsoft.extensions.dependencymodel/10.0.11",
       "hashPath": "microsoft.extensions.dependencymodel.10.0.11.nupkg.sha512"
-    },
-    "Microsoft.Graph/6.5.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-44GSZ/Tz2L3ABVec5wl4EinUsCRT/pYE/Msmz8m7Pp2AYTDj3iDjzDjVmcCRGazklrYA/Hens/IEcWWPTrvEwg==",
-      "path": "microsoft.graph/6.5.0",
-      "hashPath": "microsoft.graph.6.5.0.nupkg.sha512"
-    },
-    "Microsoft.Graph.Core/4.0.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-hWfGglaCLUZsOs0VHA2vkwBCRy0WOEfH4Wh1Y7yb1Q5nSbiyiPJWtHOuEfuEa2jqU0tPKOQ7eN8HRTSOMMQNfw==",
-      "path": "microsoft.graph.core/4.0.1",
-      "hashPath": "microsoft.graph.core.4.0.1.nupkg.sha512"
     },
     "Microsoft.Identity.Abstractions/12.6.0": {
       "type": "package",
@@ -1574,62 +1352,6 @@
       "path": "microsoft.identitymodel.validators/8.22.0",
       "hashPath": "microsoft.identitymodel.validators.8.22.0.nupkg.sha512"
     },
-    "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-s/s20YTVY9r9TPfTrN5g8zPF1YhwxyqO6PxUkrYTGI2B+OGPe9AdajWZrLhFqXIvqIW23fnUE4+ztrUWNU1+9g==",
-      "path": "microsoft.io.recyclablememorystream/3.0.1",
-      "hashPath": "microsoft.io.recyclablememorystream.3.0.1.nupkg.sha512"
-    },
-    "Microsoft.Kiota.Abstractions/2.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-cb0KA6QGvqMR1xNIjmErb5CiEbQJ/6odKcuPn2GTWD+aRMuldKDqRqRWMDT7MOBcUk9waJyJsgDG+ItQA01JmA==",
-      "path": "microsoft.kiota.abstractions/2.0.0",
-      "hashPath": "microsoft.kiota.abstractions.2.0.0.nupkg.sha512"
-    },
-    "Microsoft.Kiota.Authentication.Azure/2.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-O890EE/4mIwfZbAeayZ0dXMSJVZWwUDcvOeH2GEmUbEQlSn+w37OHhuPClhIN4UO7EcqNC5N9ynyQWhOF+FWCg==",
-      "path": "microsoft.kiota.authentication.azure/2.0.0",
-      "hashPath": "microsoft.kiota.authentication.azure.2.0.0.nupkg.sha512"
-    },
-    "Microsoft.Kiota.Http.HttpClientLibrary/2.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-oZ3ZR84InWEST6GyO9EBZMHweeprzlMiVsGy5dt9ec8Py1d6fgs4Yyyv0LJ56WoPc3Og5mM84pz3qD4hpiCT9w==",
-      "path": "microsoft.kiota.http.httpclientlibrary/2.0.0",
-      "hashPath": "microsoft.kiota.http.httpclientlibrary.2.0.0.nupkg.sha512"
-    },
-    "Microsoft.Kiota.Serialization.Form/2.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-Sm7dLRzwJRx80o/U5LUI0ICX4k0hT3tZgLAfXbO/UehsX4YVu6yiuOwCNdXlvE9tnC5LWcQdi9RRCSo3fQgI+A==",
-      "path": "microsoft.kiota.serialization.form/2.0.0",
-      "hashPath": "microsoft.kiota.serialization.form.2.0.0.nupkg.sha512"
-    },
-    "Microsoft.Kiota.Serialization.Json/2.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-0QB6RWSA3u7kQEDyaY3a3dVA98Fk2UwuYpusvX2aXmkQLPFijW4XKujQazHMoalx26fmSg6RF85ZJBqGzmgucA==",
-      "path": "microsoft.kiota.serialization.json/2.0.0",
-      "hashPath": "microsoft.kiota.serialization.json.2.0.0.nupkg.sha512"
-    },
-    "Microsoft.Kiota.Serialization.Multipart/2.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-IR27DQpYul43E+2Nw2mzEMFIzwiRjQCnCOfylIE/dlFra3QjoT/s5bhYv9ZN182U0ajkiQYYT/UORvpgGau4mw==",
-      "path": "microsoft.kiota.serialization.multipart/2.0.0",
-      "hashPath": "microsoft.kiota.serialization.multipart.2.0.0.nupkg.sha512"
-    },
-    "Microsoft.Kiota.Serialization.Text/2.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-yuQZ8VIWc3NCpK439zG105sAfyFkq8kA+fvxfXI1DA76gTGKNLBJtX8ljyuhMhcYCl/Uu9AOm/vfbbI/P5TapQ==",
-      "path": "microsoft.kiota.serialization.text/2.0.0",
-      "hashPath": "microsoft.kiota.serialization.text.2.0.0.nupkg.sha512"
-    },
     "Microsoft.VisualStudio.SolutionPersistence/1.0.52": {
       "type": "package",
       "serviceable": true,
@@ -1643,13 +1365,6 @@
       "sha512": "sha512-YqueG52R/Xej4VVbKuRIodjiAhV0HR/XVbLbNrJhCZnzjnSjgMJ/dCdV0akQQxavX6hp/LC6rqLGLcXeQYU7XA==",
       "path": "mono.texttemplating/3.0.0",
       "hashPath": "mono.texttemplating.3.0.0.nupkg.sha512"
-    },
-    "Moq/4.20.72": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-EA55cjyNn8eTNWrgrdZJH5QLFp2L43oxl1tlkoYUKIE9pRwL784OWiTXeCV5ApS+AMYEAlt7Fo03A2XfouvHmQ==",
-      "path": "moq/4.20.72",
-      "hashPath": "moq.4.20.72.nupkg.sha512"
     },
     "MudBlazor/9.9.0": {
       "type": "package",
@@ -1693,19 +1408,12 @@
       "path": "sqlitepclraw.provider.e_sqlite3/2.1.12",
       "hashPath": "sqlitepclraw.provider.e_sqlite3.2.1.12.nupkg.sha512"
     },
-    "Std.UriTemplate/2.0.8": {
+    "System.ClientModel/1.8.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-IAR4gJlLVD4r/FsU/rDb1+9sbB3/tCFVZz5IzlbM2yHoiUisBi5Ek/KXRUF7RcqNARka79EoaOz9INnXvQ/O6w==",
-      "path": "std.uritemplate/2.0.8",
-      "hashPath": "std.uritemplate.2.0.8.nupkg.sha512"
-    },
-    "System.ClientModel/1.10.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-lBEWs54F5Y5pZ9hC+8z4S/X76957ex+DPk7WecRHlbIHtrPfbRMMlOgI3iDn4Jpb3bSxvBnKaaHoD59auFjlBA==",
-      "path": "system.clientmodel/1.10.0",
-      "hashPath": "system.clientmodel.1.10.0.nupkg.sha512"
+      "sha512": "sha512-AqRzhn0v29GGGLj/Z6gKq4lGNtvPHT4nHdG5PDJh9IfVjv/nYUVmX11hwwws1vDFeIAzrvmn0dPu8IjLtu6fAw==",
+      "path": "system.clientmodel/1.8.0",
+      "hashPath": "system.clientmodel.1.8.0.nupkg.sha512"
     },
     "System.CodeDom/6.0.0": {
       "type": "package",
@@ -1763,12 +1471,12 @@
       "path": "system.identitymodel.tokens.jwt/8.22.0",
       "hashPath": "system.identitymodel.tokens.jwt.8.22.0.nupkg.sha512"
     },
-    "System.Memory.Data/10.0.3": {
+    "System.Memory.Data/8.0.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-MaGhRfGunmrj/nHjtsi9XkhlYJ/ERGWrbA+BiSKNtGnAjc9XlG5EhAvak6VRcX5LYzPF6pBO8nJ613dTgzabig==",
-      "path": "system.memory.data/10.0.3",
-      "hashPath": "system.memory.data.10.0.3.nupkg.sha512"
+      "sha512": "sha512-BVYuec3jV23EMRDeR7Dr1/qhx7369dZzJ9IWy2xylvb4YfXsrUxspWc4UWYid/tj4zZK58uGZqn2WQiaDMhmAg==",
+      "path": "system.memory.data/8.0.1",
+      "hashPath": "system.memory.data.8.0.1.nupkg.sha512"
     },
     "System.Security.Cryptography.ProtectedData/4.5.0": {
       "type": "package",
@@ -1776,48 +1484,6 @@
       "sha512": "sha512-wLBKzFnDCxP12VL9ANydSYhk59fC4cvOr9ypYQLPnAj48NQIhqnjdD2yhP8yEKyBJEjERWS9DisKL7rX5eU25Q==",
       "path": "system.security.cryptography.protecteddata/4.5.0",
       "hashPath": "system.security.cryptography.protecteddata.4.5.0.nupkg.sha512"
-    },
-    "xunit/2.9.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-TlXQBinK35LpOPKHAqbLY4xlEen9TBafjs0V5KnA4wZsoQLQJiirCR4CbIXvOH8NzkW4YeJKP5P/Bnrodm0h9Q==",
-      "path": "xunit/2.9.3",
-      "hashPath": "xunit.2.9.3.nupkg.sha512"
-    },
-    "xunit.abstractions/2.0.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-pot1I4YOxlWjIb5jmwvvQNbTrZ3lJQ+jUGkGjWE3hEFM0l5gOnBWS+H3qsex68s5cO52g+44vpGzhAt+42vwKg==",
-      "path": "xunit.abstractions/2.0.3",
-      "hashPath": "xunit.abstractions.2.0.3.nupkg.sha512"
-    },
-    "xunit.assert/2.9.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-/Kq28fCE7MjOV42YLVRAJzRF0WmEqsmflm0cfpMjGtzQ2lR5mYVj1/i0Y8uDAOLczkL3/jArrwehfMD0YogMAA==",
-      "path": "xunit.assert/2.9.3",
-      "hashPath": "xunit.assert.2.9.3.nupkg.sha512"
-    },
-    "xunit.core/2.9.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-BiAEvqGvyme19wE0wTKdADH+NloYqikiU0mcnmiNyXaF9HyHmE6sr/3DC5vnBkgsWaE6yPyWszKSPSApWdRVeQ==",
-      "path": "xunit.core/2.9.3",
-      "hashPath": "xunit.core.2.9.3.nupkg.sha512"
-    },
-    "xunit.extensibility.core/2.9.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-kf3si0YTn2a8J8eZNb+zFpwfoyvIrQ7ivNk5ZYA5yuYk1bEtMe4DxJ2CF/qsRgmEnDr7MnW1mxylBaHTZ4qErA==",
-      "path": "xunit.extensibility.core/2.9.3",
-      "hashPath": "xunit.extensibility.core.2.9.3.nupkg.sha512"
-    },
-    "xunit.extensibility.execution/2.9.3": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-yMb6vMESlSrE3Wfj7V6cjQ3S4TXdXpRqYeNEI3zsX31uTsGMJjEw6oD5F5u1cHnMptjhEECnmZSsPxB6ChZHDQ==",
-      "path": "xunit.extensibility.execution/2.9.3",
-      "hashPath": "xunit.extensibility.execution.2.9.3.nupkg.sha512"
     }
   }
 }

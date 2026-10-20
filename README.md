@@ -6,13 +6,17 @@ A maintainable internal dashboard for tracking migration progress from on-premis
 
 This application monitors key migration metrics over time:
 
-- **Users still synced from on-premises AD**
-- **Groups still synced from on-premises AD**
+- **Users still synced from on-premises AD**, and **users migrated** (synced at some point, now cloud-only)
+- **Groups still synced from on-premises AD**, and **groups migrated**
 - **Microsoft Entra hybrid-joined devices**
 - **Pending hybrid device registrations**
 - **Microsoft Entra-joined devices** (for comparison)
 
-The MVP runs locally with simulated data and SQLite. The architecture is designed to support future integration with Microsoft Graph and Azure Table Storage without major refactoring.
+The app runs in two modes, selected by `MetricsCollection:Source`:
+- **Simulated**: generated data, for demos and testing without a tenant.
+- **Graph**: live counts from Microsoft Graph, using the signed-in user's delegated permissions. Used in production.
+
+Snapshots are stored in SQLite. The app signs users in with Microsoft Entra ID (multi-tenant, "organizations").
 
 ## Quick Start
 
@@ -123,8 +127,29 @@ Edit `appsettings.json` to configure metrics collection:
 
 - **Enabled:** Turn collection on/off
 - **IntervalHours:** Frequency of automated collection (decimals supported: 0.083 ≈ 5 minutes)
-- **Source:** "Simulated" (future: "Graph")
+- **Source:** `"Simulated"` or `"Graph"`
 - **StaleDataThresholdHours:** Dashboard warning threshold
+
+### Graph Settings
+
+```json
+{
+  "GraphApi": {
+    "Scopes": [ "User.Read.All", "Group.Read.All", "Device.Read.All" ],
+    "PageSize": 999,
+    "MaxRetries": 3,
+    "RetryDelayMilliseconds": 1000,
+    "TimeoutSeconds": 30
+  }
+}
+```
+
+Scopes are delegated: the effective access is these scopes intersected with the signed-in user's own directory roles. The app is multi-tenant (`TenantId` is `organizations`), so the tenant is whichever one the signed-in user belongs to. No tenant ID is configured.
+
+### Sign-in Credentials
+
+- **Local development:** `AzureAd:ClientId` and `AzureAd:ClientSecret` go in User Secrets (`dotnet user-secrets set`). Never in `appsettings.json`.
+- **Production (`appsettings.Production.json`):** no secret. The App Service uses its system-assigned managed identity with workload identity federation (`SignedAssertionFromManagedIdentity`). `AzureAd:ClientId` is still required and is set as an App Setting.
 
 ### Development vs Production
 
@@ -133,6 +158,17 @@ Edit `appsettings.json` to configure metrics collection:
 
 **Production** (`appsettings.json`):
 - IntervalHours: 6 for standard monitoring
+- Source: `"Graph"`
+
+### Environment Variables (App Service)
+
+| Setting | Value |
+|---|---|
+| `AzureAd__ClientId` | Application (client) ID of the app registration |
+| `ConnectionStrings__Tracker` | `Data Source=/home/data/tracker.db` |
+| `DataProtection__KeyRingPath` | `/home/dataprotection-keys` |
+
+Settings with `__` map to the nested config keys. `/home` is the only persistent storage on App Service Linux.
 
 ## Database
 
@@ -151,10 +187,14 @@ EF Core migrations are applied automatically on app startup. The database is cre
 **MetricSnapshot** table with indexed columns:
 - `Id` (PK)
 - `CapturedAtUtc` (indexed) — UTC timestamp
-- `SyncedUsers`, `SyncedGroups`, `HybridDevices`, `PendingHybridDevices`, `EntraJoinedDevices` — All non-negative integers
+- `TenantId` — Entra tenant of the signed-in user (indexed with `CapturedAtUtc`). Every snapshot query filters on it.
+- `SyncedUsers`, `MigratedUsers`, `SyncedGroups`, `MigratedGroups`, `CloudOnlyGroups`, `HybridDevices`, `PendingHybridDevices`, `EntraJoinedDevices`, `TotalUsers`, `TotalGroups`, `TotalDevices` — All non-negative integers
+- `Source` — `"Graph"` or `"Simulated"`. Rows from the two sources are not comparable, so trends should not mix them.
 - `CollectionSucceeded` (indexed) — Boolean
 - `CollectionDurationMilliseconds` — Long
 - `ErrorMessage` — Nullable string (max 500 chars, no PII)
+
+Migrations added for these columns: `AddTenantIdToMetricSnapshot`, `AddSourceToMetricSnapshot`, `AddMigratedUsersToMetricSnapshot`, `AddMigratedAndCloudOnlyGroupsToMetricSnapshot`. `Program.cs` applies pending migrations on startup.
 
 ### Running Migrations
 
@@ -177,7 +217,9 @@ dotnet ef migrations remove
 
 ### Dashboard
 
-- **Metric Cards:** Current values with change indicators (↓ = progress, ↑ = concern)
+- **Donut charts:** Users (overall: cloud-only vs on-prem origin), Users (on-prem origin: still synced vs migrated), Groups (overall), Groups (on-prem origin: still synced vs migrated), Windows devices (hybrid / Entra / other)
+- **Metric Cards:** Migrated % for users and groups (with "X of Y"), and hybrid-joined devices with change indicators (↓ = progress, ↑ = concern)
+- **Drill-down pages** (`/details/users`, `/details/groups`, `/details/devices`): live Graph lists. The devices grid shows DeviceId.
 - **Progress Bars:** % migrated since baseline (capped 0-100%)
 - **Collection Status:** Last collection time, duration, success/failure
 - **Manual Collection:** "Collect Now" button with loading state
@@ -208,13 +250,37 @@ Progression:
 - Never produces negative counts
 - Deterministic enough for testing
 
+### Metric Definitions (Graph)
+
+Each count is a `$count=true` request in `Services/GraphMigrationMetricsSource.cs`. Device counts are restricted to `operatingSystem eq 'Windows'`.
+
+| Metric | Graph query filter | Notes |
+|---|---|---|
+| Users synced from AD | `users?$filter=onPremisesSyncEnabled eq true` | |
+| Users migrated | `users?$filter=onPremisesSyncEnabled eq false` | Cloud-only accounts show `null` here, not `false`, so they are not counted |
+| Groups synced from AD | `groups?$filter=onPremisesSyncEnabled eq true` | |
+| Groups never on-prem | `groups?$filter=onPremisesSecurityIdentifier eq null` | Used with the total to find groups of on-prem origin |
+| Groups migrated | (total groups − cloud-only groups) − synced groups | Calculated, not queried |
+| Hybrid devices | `devices?$filter=trustType eq 'ServerAd' and operatingSystem eq 'Windows'` | |
+| Entra-joined devices | `devices?$filter=trustType eq 'AzureAd' and operatingSystem eq 'Windows'` | |
+| Total users / groups / devices | no filter / no filter / Windows only | |
+
+Percentages on the dashboard:
+- Users migrated % = migrated users ÷ (synced + migrated)
+- Groups migrated % = migrated groups ÷ (synced + migrated)
+
+The `Math.Max(0, …)` guards keep a stale or inconsistent total from producing a negative count.
+
+Filters that were tried and do not work:
+- `onPremisesUserPrincipalName ne null`: Graph returns `400 Request_UnsupportedQuery` ("An unsupported property was specified"). That property is not filterable.
+
 ## Architecture & Design
 
 ### Service Abstractions
 
 **IMigrationMetricsSource** — Metrics retrieval interface
-- Current: `SimulatedMetricsSource`
-- Future: `GraphMigrationMetricsSource`
+- Current: `SimulatedMetricsSource` and `GraphMigrationMetricsSource` (selected by `MetricsCollection:Source`)
+- Future: none planned for the metrics source
 
 **IMetricSnapshotStore** — Snapshot persistence interface
 - Current: `SqliteMetricSnapshotStore`
@@ -247,34 +313,23 @@ Only counts and timestamps are persisted.
 
 ## Future Work
 
-### Phase 2: Microsoft Graph Integration
+### Phase 2: Microsoft Graph Integration — done
 
-1. Create `GraphMigrationMetricsSource` implementing `IMigrationMetricsSource`
-2. Query Microsoft Graph v1.0:
-   - Users: `onPremisesSyncEnabled == true`
-   - Groups: `onPremisesSyncEnabled == true`
-   - Devices: Filter by `trustType` and `profileType`
-3. Use read-only permissions: `User.Read.All`, `Group.Read.All`, `Device.Read.All`
-4. Handle pagination and throttling
-5. Use managed identity (Azure) or user secrets (local dev)
+- `GraphMigrationMetricsSource` implements the Graph queries in *Metric Definitions*.
+- Delegated read-only scopes: `User.Read.All`, `Group.Read.All`, `Device.Read.All`.
+- Retries with backoff on transient errors. Failed queries are recorded as failed snapshots, never as zeros.
+- Collection happens on the signed-in user's visit and on "Collect Now" (`SnapshotOnVisitService`). There is no background collector, because Graph is called with the user's own token.
 
-### Phase 3: Azure Deployment
+### Phase 3: Azure Deployment — in progress
 
-1. Create `AzureTableMetricSnapshotStore` implementing `IMetricSnapshotStore`
-2. Deploy to Azure App Service with:
-   - System-assigned managed identity
-   - Always On enabled
-   - HTTPS Only enabled
-3. Replace SQLite with Azure Table Storage
-4. Implement Microsoft Entra authentication via `Microsoft.Identity.Web`
+- Deployed to Azure App Service (Linux B1, .NET 10) with a system-assigned managed identity and workload identity federation. There is no client secret in production.
+- Remaining: move the repo to Azure DevOps and enable `azure-pipelines.yml`.
+- Still on SQLite. Next: Azure SQL (replace `SqliteMetricSnapshotStore`), then scale-out.
 
-### Phase 4: Authentication & Authorization
+### Phase 4: Authentication & Authorization — partly done
 
-1. Add `Microsoft.Identity.Web` for Entra sign-in
-2. Authorize access via:
-   - Application role, or
-   - Security group membership
-3. Keep background collection (managed identity) separate from user authentication
+- Done: Microsoft Entra sign-in via `Microsoft.Identity.Web` (multi-tenant, "organizations"). Sign-in is controlled per customer by "Assignment required" on the Enterprise Application.
+- To do: restrict to an application role or security group in the app, not only on the Enterprise Application.
 
 ## Testing
 
@@ -328,11 +383,47 @@ dotnet build -c Release
 dotnet publish -c Release -o ./publish
 ```
 
-Output in `./publish` folder. Copy to deployment target and run:
-```bash
-./365MigrationTracker.exe
+### Azure App Service (current production)
+
+| Item | Value |
+|---|---|
+| Resource group | `<resource-group>` |
+| App Service plan | `appserviceplan-prod-01` (Linux, B1) |
+| Web app | `365migrationdashboard-prod-01` |
+| Runtime stack | `DOTNETCORE|10.0` |
+| Database | SQLite at `/home/data/tracker.db` (single instance only) |
+
+**One-time setup**
+
+1. **Managed identity:** Web app > Settings > Identity > System assigned > On.
+2. **Federated credential:** App registration > Certificates & secrets > Federated credentials > Add credential > scenario "Managed identity", pointing at the web app's identity.
+3. **Redirect URIs:** App registration > Authentication, add `https://365migrationdashboard-prod-01.azurewebsites.net/signin-oidc` and `https://365migrationdashboard-prod-01.azurewebsites.net/signout-callback-oidc`.
+4. **App Settings:** Web app > Settings > Environment variables > App settings. Add the three values in *Environment Variables (App Service)* above. Confirm `ASPNETCORE_ENVIRONMENT` is `Production`.
+5. **Admin consent:** Grant tenant admin consent for `User.Read.All`, `Group.Read.All` and `Device.Read.All` on the app registration, then assign users who may sign in.
+
+**Manual deploy (PowerShell)**
+
+```powershell
+$resourceGroupName = "<resource-group>"
+$webAppName        = "365migrationdashboard-prod-01"
+
+dotnet publish 365MigrationTracker.csproj -c Release -o "$env:TEMP\publish"
+Compress-Archive -Path "$env:TEMP\publish\*" -DestinationPath "$env:TEMP\tracker.zip" -Force
+Publish-AzWebApp -ResourceGroupName $resourceGroupName -Name $webAppName -ArchivePath "$env:TEMP\tracker.zip" -Force
 ```
-(Or `dotnet 365MigrationTracker.dll` on non-Windows)
+
+**Planned: Azure DevOps pipeline**
+
+`azure-pipelines.yml` builds on Ubuntu with .NET 10 and deploys the app with `AzureWebApp@1` (`appType: webAppLinux`). Before using it:
+- Move the repo from GitHub to Azure DevOps (or connect the pipeline to GitHub).
+- Create an Azure Resource Manager service connection and put its name in `azureSubscription`.
+- Replace `<azure-resource-manager-service-connection-name>` in the file.
+
+### Running the Published Build Locally
+
+```bash
+dotnet 365MigrationTracker.dll
+```
 
 ## Troubleshooting
 
@@ -360,6 +451,24 @@ Output in `./publish` folder. Copy to deployment target and run:
 - Click "Collect Now" manually to generate initial data
 - Wait for background service (5 min dev, 6 hours prod)
 - Check for errors in browser console (F12 → Console tab)
+
+### Graph collection fails
+
+**"Collection failed: Graph API collection failed: Response status code does not indicate success: 400 (Bad Request)"**
+- The console log shows the URL and Graph's response body. Look for `Request_UnsupportedQuery`, which means a property is not filterable (see Metric Definitions).
+
+**"Pending model changes" on startup (`dotnet watch`)**
+- The EF model has a property that no migration covers. Add a migration (`dotnet ef migrations add ...`) and update `DashboardDbContextModelSnapshot.cs`.
+
+**"Unable to open database file" on App Service**
+- Check `ConnectionStrings__Tracker` points at `/home/data/tracker.db`. `Program.cs` creates the directory on startup.
+- `dotnet watch` or a running local app locks the `apphost.exe` during build. Stop it before rebuilding.
+
+### App Service
+
+- After changing App Settings, the app restarts. Check Log stream for startup errors.
+- A sign-in loop or `AADSTS` error usually means the redirect URIs or the federated credential do not match the web app's managed identity.
+- Only one instance is supported while the database is SQLite. Scaling out needs Azure SQL first.
 
 ## Support & Contributing
 

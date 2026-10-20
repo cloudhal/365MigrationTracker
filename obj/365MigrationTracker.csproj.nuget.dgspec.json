@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj": {}
+    "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj": {
+    "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj",
+        "projectUniqueName": "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj",
         "projectName": "365MigrationTracker",
-        "projectPath": "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj",
+        "projectPath": "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\365MigrationTracker.csproj",
         "packagesPath": "C:\\Users\\hsclater\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hsclater\\repos\\365MigrationDashboard\\obj\\",
+        "outputPath": "c:\\Users\\hsclater\\repos\\365MigrationDashboard\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hsclater\\AppData\\Roaming\\NuGet\\NuGet.Config"
